@@ -32,25 +32,27 @@
 #' # plot lucid model
 #' fit1 <- estimate_lucid(G = G, Z = Z, Y = Y_normal, lucid_model = "early", 
 #' CoY = NULL, family = "normal", K = 2, seed = 1008)
-#' plot_lucid(fit1)
+#' plot(fit1)
 #'
 #' # change node color
-#' plot_lucid(fit1, G_color = "yellow")
-#' plot_lucid(fit1, Z_color = "red")
+#' plot(fit1, G_color = "yellow")
+#' plot(fit1, Z_color = "red")
 #'
 #' # change link color
-#' plot_lucid(fit1, pos_link_color = "red", neg_link_color = "green")
-
-plot_lucid <- function(x,
+#' plot(fit1, pos_link_color = "red", neg_link_color = "green")
+plot.early_lucid <- function(x,
                        G_color = "dimgray",
                        X_color = "#eb8c30",
                        Z_color = "#2fa4da",
                        Y_color =  "#afa58e",
                        pos_link_color = "#67928b",
                        neg_link_color = "#d1e5eb",
+                       # this is a placeholder for the function plot_omics
+                       # if FALSE, plot the sankey diagram
+                       # if TRUE, plot the omics profile
+                       # plot_omics_profile = FALSE, 
                        fontsize = 7
 ) {
-  if (inherits(x,"early_lucid")){
   K <- x$K
   var.names <- x$var.names
   pars <- x$pars
@@ -105,8 +107,73 @@ plot_lucid <- function(x,
                      sinksRight = FALSE,
                      fontSize = fontsize)
   p
-  }else{
-    stop("The plotting function of LUCID in Parallel and Serial is still under development")
-    ###LUCID in parallel/serial
-    ###need work
-  }}
+   
+}
+
+
+
+#' @title Visualize LUCID model through a Sankey diagram
+#' @description In the Sankey diagram, each node either represents a variable (exposure,
+#' omics or outcome) or a latent cluster. Each line represents an association. The
+#' color of the node represents variable type, either exposure, omics or outcome.
+#' The width of the line represents the effect size of a certain association; the
+#' color of the line represents the direction of a certain association. Only work for LUCID early for now.
+#'
+#' @param x A LUCID model fitted by \code{\link{estimate_lucid}}
+#' @param G_color Color of node for exposure
+#' @param X_color Color of node for latent cluster
+#' @param Z_color Color of node for omics data
+#' @param Y_color Color of node for outcome
+#' @param pos_link_color Color of link corresponds to positive association
+#' @param neg_link_color Color of link corresponds to negative association
+#' @param fontsize Font size for annotation
+#'
+#' @return A DAG graph created by \code{\link{sankeyNetwork}}
+#'
+#' @import networkD3
+#' @importFrom jsonlite toJSON
+#'
+#' @export
+plot.lucid_serial <- function(x,
+                             G_color = "dimgray",
+                             X_color = "#eb8c30",
+                             Z_color = "#2fa4da",
+                             Y_color =  "#afa58e",
+                             pos_link_color = "#67928b",
+                             neg_link_color = "#d1e5eb",
+                             fontsize = 7) {
+  stop("The plotting function of LUCID in Parallel and Serial is still under development")
+}
+
+#' @title Visualize LUCID model through a Sankey diagram
+#' @description In the Sankey diagram, each node either represents a variable (exposure,
+#' omics or outcome) or a latent cluster. Each line represents an association. The
+#' color of the node represents variable type, either exposure, omics or outcome.
+#' The width of the line represents the effect size of a certain association; the
+#' color of the line represents the direction of a certain association. Only work for LUCID early for now.
+#'
+#' @param x A LUCID model fitted by \code{\link{estimate_lucid}}
+#' @param G_color Color of node for exposure
+#' @param X_color Color of node for latent cluster
+#' @param Z_color Color of node for omics data
+#' @param Y_color Color of node for outcome
+#' @param pos_link_color Color of link corresponds to positive association
+#' @param neg_link_color Color of link corresponds to negative association
+#' @param fontsize Font size for annotation
+#'
+#' @return A DAG graph created by \code{\link{sankeyNetwork}}
+#'
+#' @import networkD3
+#' @importFrom jsonlite toJSON
+#'
+#' @export
+plot.lucid_parallel <- function(x,
+                              G_color = "dimgray",
+                              X_color = "#eb8c30",
+                              Z_color = "#2fa4da",
+                              Y_color =  "#afa58e",
+                              pos_link_color = "#67928b",
+                              neg_link_color = "#d1e5eb",
+                              fontsize = 7) {
+  stop("The plotting function of LUCID in Parallel and Serial is still under development")
+}

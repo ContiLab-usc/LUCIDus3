@@ -210,7 +210,7 @@ tune_lucid_auxi <- function(G,
     if("try-error" %in% class(fit)) {
       tune_list[i, 5] <- NA
     } else {
-      tune_list[i, 5] <- summary_lucid(fit)$BIC
+      tune_list[i, 5] <- summary(fit)$BIC
     }
     res_model[[i]] <- fit
   }

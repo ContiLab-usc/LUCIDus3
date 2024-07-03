@@ -4,9 +4,9 @@ est_lucid <- function(lucid_model = c("early", "parallel"),
                       G, Z, Y, CoG = NULL, CoY = NULL, K,
                       init_omic.data.model = "EEV",
                       useY = TRUE,
-                      tol = 1e-3,
-                      max_itr = 1e3,
-                      max_tot.itr = 1e4,
+                      tol = 1e-2,
+                      max_itr = 1e2,
+                      max_tot.itr = 1e3,
                       Rho_G = 0,
                       Rho_Z_Mu = 0,
                       Rho_Z_Cov = 0,
@@ -475,7 +475,7 @@ est_lucid <- function(lucid_model = c("early", "parallel"),
     }else{
       family = "binomial"
     }
-    
+    modelNames =  rep(init_omic.data.model, length(K))
 
     dimCoG <- ifelse(is.null(CoG), 0, ncol(CoG))
     dimCoY <- ifelse(is.null(CoY), 0, ncol(CoY))
@@ -508,24 +508,7 @@ est_lucid <- function(lucid_model = c("early", "parallel"),
         }
 
       }}
-    
-    #if null for init_omic.data.model, automatically fit every omic model for each layer
-    mclust.fit <- vector("list", length(Z))
-    modelNames <- c()
-    if(is.null(init_omic.data.model)){
-      for(i in 1:nOmics) {
-        invisible(capture.output(mclust.fit[[i]] <- Mclust(Z[[i]][na_pattern[[i]]$indicator_na != 3, ],
-                                                           G = K[i],
-                                                           modelNames = init_omic.data.model)))
-        modelNames <- c(modelNames, mclust.fit[[i]]$modelName)
-      }
-      
-    }else{
-      modelNames =  rep(init_omic.data.model, length(K))
-    }
-    
-    print(modelNames)
-    
+
     tot.itr <- 0
     flag_converge <- FALSE
     while(!flag_converge && tot.itr <= max_tot.itr) {
@@ -539,42 +522,13 @@ est_lucid <- function(lucid_model = c("early", "parallel"),
     Mu <- Mu_Sigma$Mu
     Sigma <- Mu_Sigma$Sigma
     Beta <- vector(mode = "list", length = nOmics)
-    
-    
-    #for list-wise missing obs, predict their cluster based on G and initial beta
-    complete_est_cluster <- vector(mode = "list", length = nOmics)
-    listwise_ind = FALSE
-    
     for(i in 1:nOmics) {
-      invisible(capture.output(temp_fit <- nnet::multinom(Mu_Sigma$z[[i]] ~ G[na_pattern[[i]]$indicator_na != 3, ])))
+      invisible(capture.output(temp_fit <- nnet::multinom(Mu_Sigma$z[[i]] ~ G)))
       Beta[[i]] <- coef(temp_fit)
-      
-      Beta_matrix <- rbind(rep(0, ncol(Beta[[i]])),
-                           Beta[[i]])
-      xb <- cbind(rep(1, nrow(G)), G) %*% t(Beta_matrix)
-
-      exp_xb = exp(xb)
-      exp_xb <- t(apply(exp_xb, 1, function(x) x / sum(x)))
-      complete_est_cluster[[i]] <- exp_xb
-      
-      if(any(na_pattern[[i]]$indicator_na == 3)){
-        listwise_ind = TRUE
-      }
     }
-    
-    #now that Mu_Sigma$z (inital clustering of mclust by each layer) has different obs due to list-wise missing diff between layer
-    #maybe for indicator_na == 3, use beta to assign to cluster
-    
     # Beta <- initialize_Beta(K = K, nG = nG)
-    
-    #differet Gamma initiation depending on whether we have list-wise missingness
-    if(listwise_ind == TRUE){
-      Gamma <- initialize_Delta(K = K, CoY = CoY, family = family,
-                                z = complete_est_cluster, Y = Y)
-    }else{
-      Gamma <- initialize_Delta(K = K, CoY = CoY, family = family,
-                                z = Mu_Sigma$z, Y = Y)
-    }
+    Gamma <- initialize_Delta(K = K, CoY = CoY, family = family,
+                              z = Mu_Sigma$z, Y = Y)
     loglik <- -Inf
 
 
@@ -609,22 +563,20 @@ est_lucid <- function(lucid_model = c("early", "parallel"),
         }
       }
 
-      
       # M-step 1
       #Mstep_GtoX added penalty, but how is G exluded?
       res_Beta <- Mstep_GtoX(G = G, r = Estep_r, selectG = Select_G, penalty = Rho_G, K = K, N = N)
-      #We need to match the input of r for Mstep_XtoZ, it is a probability =(inclusion p)
-      E_r <- vector(mode = "list", length = nOmics)
-      
-      res_Mu_Sigma <- Mstep_XtoZ(Z = Z, r = Estep_r, selectZ = Select_Z, penalty.mu = Rho_Z_Mu, penalty.cov = Rho_Z_Cov, K = K,
-                                 modelNames = modelNames, N = N, na_pattern = na_pattern, mu = Mu)
+      res_Mu_Sigma <- Mstep_XtoZ(Z = Z, r = Estep_r, K = K,
+                                modelNames = modelNames, N = N, na_pattern = na_pattern)
       if(useY) {
         res_Gamma <- Mstep_XtoY(Y = Y, CoY = CoY,r = Estep_r, K = K, N = N,
-                                family = family)
+                              family = family)
       }
-      
+
       if(is.null(res_Mu_Sigma$Mu)){
-        cat("variable selection failed, try LUCID with another seed \n")
+        if(verbose){
+          cat("variable selection failed, try LUCID with another seed \n")
+        }
         break
       }
 
@@ -670,55 +622,39 @@ est_lucid <- function(lucid_model = c("early", "parallel"),
       ###  if(Select_G) {
       ### new.loglik <- new.loglik - Rho_G * sum(abs(res.beta))
       ### }
-      total_sum_Mu <- 0
-      total_sum_Sigma <- 0
-      # Loop through each matrix in 'mu'
-      for (i in length(Mu)) {
-        matrix_sum_mu <- sum(abs(Mu[[i]]))  
-        matrix_sum_sigma <- sum(abs(Sigma[[i]])) 
-        total_sum_Mu <- total_sum_Mu + matrix_sum_mu  
-        total_sum_Sigma <- total_sum_Sigma + matrix_sum_sigma
-      }
-      
-      if(Select_Z) {
-        loglik_update <- loglik_update - Rho_Z_Mu * total_sum_Mu - Rho_Z_Cov * total_sum_Sigma
-      }
-      
-      
+      ### if(Select_Z) {
+      ### new.loglik <- new.loglik - Rho_Z_Mu * sum(abs(res.mu)) - Rho_Z_Cov * sum(abs(res.sigma))
+      ### }
+
       if(abs(loglik - loglik_update) < tol) {
         flag_converge <- TRUE
-        cat("Success: LUCID in parallel converges!", "\n\n")
+        if(verbose){
+          cat("Success: LUCID in parallel converges!", "\n\n")
+        }
       } else {
         loglik <- loglik_update
-        if(isTRUE(verbose)) {
-          if(Select_G | Select_Z) {
-            cat("iteration", itr,": M-step finished, ", "penalized loglike = ", sprintf("%.3f", loglik_update), "\n")
-          } else{
-            cat("iteration", itr,": M-step finished, ", "loglike = ", sprintf("%.3f", loglik_update), "\n")
-          }
-        } else {
-          cat(".")
-          }
+        if(verbose){
+          cat(paste0("iteration ", itr, ": log-likelihood = ", loglik_update, "\n"))
         }
       }
+    }
     }
 
     #Regularity to be added, but have the setup for now, we select all the G and Z for now!!!
     #if(Select_G){
-    #tt1 <- apply(pars$beta[, -1], 2, range)
-    #selectG <- abs(tt1[2, ] - tt1[1, ]) > 0.001
+      #tt1 <- apply(pars$beta[, -1], 2, range)
+      #selectG <- abs(tt1[2, ] - tt1[1, ]) > 0.001
     #} else{
-    selectG <- rep(TRUE, nG)
+      selectG <- rep(TRUE, nG)
     #}
-    selectZ <- vector(mode = "list", length = nOmics)
-    if(Select_Z){
-      for (i in 1:nOmics){
-        tt2 <- apply(t(Mu[[i]]), 2, range)
-        selectZ[[i]] <- abs(tt2[2, ] - tt2[1, ]) > 0.001
-      }
-    }else{
+    #if(Select_Z){
+      #tt2 <- apply(pars$mu, 2, range)
+      #selectZ <- abs(tt2[2, ] - tt2[1, ]) > 0.001
+    #} else{
+      selectZ <- vector(mode = "list", length = nOmics)
       for (i in 1:nOmics){selectZ[[i]] = rep(TRUE,ncol(Z[[i]]))}
-    }
+    #}
+
 
     # 3. summarize results ===============
     if(!useY) {
@@ -745,10 +681,10 @@ est_lucid <- function(lucid_model = c("early", "parallel"),
                     Z = Z,
                     z = Estep_r,
                     init_impute = init_impute,
-                    init_par = "random", #only random init_par
-                    Rho = list(Rho_G = Rho_G,
-                    Rho_Z_Mu = Rho_Z_Mu,
-                    Rho_Z_Cov = Rho_Z_Cov)
+                    init_par = "random" #only random init_par
+                    #Rho = list(Rho_G = Rho_G,
+                    #Rho_Z_Mu = Rho_Z_Mu,
+                    #Rho_Z_Cov = Rho_Z_Cov)
     )
     class(results) <- c("lucid_parallel")
     return(results)

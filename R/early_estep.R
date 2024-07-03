@@ -25,8 +25,7 @@ Estep_early <- function(beta,
                   K,
                   N,
                   useY,
-                  ind.na, 
-                  ...) {
+                  ind.na, ...) {
   # initialize vectors for storing likelihood
   pXgG <- pZgX <- pYgX <- matrix(rep(0, N * K), nrow = N)
 
@@ -47,7 +46,7 @@ Estep_early <- function(beta,
   if(useY){
     pYgX <- family.list$f.pYgX(Y, gamma, K = K, N = N, ...)
   }
-  
+
   vec <- pXgG + pZgX + pYgX
   return (vec)
 }

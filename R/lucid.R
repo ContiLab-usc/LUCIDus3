@@ -256,30 +256,22 @@ lucid <- function(G,
   select_G <- best_model$select$selectG
   if(flag_select_G) {
     if(sum(select_G) == 0) {
-      if(verbose_tune){
         cat("No exposure variables is selected using the given penalty Rho_G, please try a smaller one \n \n")
         cat("LUCID model will be fitted without variable selection on exposures (G) \n \n")
-      }
       select_G <- rep(TRUE, length(select_G))
     } else {
-      if(verbose_tune){
         cat(paste0(sum(select_G), "/", length(select_G)), "exposures are selected \n \n")
-      }
     }
   }
 
   select_Z <- best_model$select$selectZ
   if(flag_select_Z) {
     if(sum(select_Z) == 0) {
-      if(verbose_tune){
         cat("No omics variables is selected using the given penalty Rho_Z_Mu and Rho_Z_Cov, please try smaller ones \n \n")
         cat("LUCID model will be fitted without variable selection on omics data (Z) \n \n")
-      }
       select_Z <- rep(TRUE, length(select_Z))
     } else {
-      if(verbose_tune){
         cat(paste0(sum(select_Z), "/", length(select_Z)), "omics variables are selected \n \n")
-      }
 
     }
   }

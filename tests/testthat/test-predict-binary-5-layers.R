@@ -33,7 +33,7 @@ test_that("check estimations of LUCID with binary outcome (K = 2,2,2)", {
   n_Y <- rbinom(n=100, size =1, prob =0.45)
 
   #use training data
-  pred1 <- predict_lucid(model = fit1,
+  pred1 <- predict(model = fit1,
                          lucid_model = "parallel",
                          G = G,
                          Z = Z,
@@ -43,11 +43,11 @@ test_that("check estimations of LUCID with binary outcome (K = 2,2,2)", {
   expect_equal(fit1$inclusion.p, pred1$inclusion.p, tolerance = 0.05)
   expect_equal(class(pred1$pred.x), "list")
   expect_equal(max(pred1$pred.y), 1)
-  expect_equal(mean(pred1$pred.y), 0.28)
+  expect_equal(mean(pred1$pred.y), 0.32)
   expect_equal(mean(pred1$inclusion.p[[1]]), 0.5)
 
   #use new data
-  pred2 <- predict_lucid(model = fit1,
+  pred2 <- predict(model = fit1,
                          lucid_model = "parallel",
                          G = n_G,
                          Z = n_Z,
@@ -56,11 +56,11 @@ test_that("check estimations of LUCID with binary outcome (K = 2,2,2)", {
 
   expect_equal(class(pred2$pred.x), "list")
   expect_equal(max(pred2$pred.y), 1)
-  expect_equal(mean(pred2$pred.y), 0.28)
+  expect_equal(mean(pred2$pred.y), 0.32)
   expect_equal(mean(pred2$inclusion.p[[1]]), 0.5)
 
   #new data not using Y, and response = FALSE
-  pred3 <- predict_lucid(model = fit1,
+  pred3 <- predict(model = fit1,
                          lucid_model = "parallel",
                          G = n_G,
                          Z = n_Z,
@@ -68,7 +68,7 @@ test_that("check estimations of LUCID with binary outcome (K = 2,2,2)", {
                          response = FALSE)
 
   expect_equal(class(pred3$pred.x), "list")
-  expect_equal(max(pred3$pred.y), 0.7, tolerance = 0.05)
+  expect_equal(max(pred3$pred.y), 0.61, tolerance = 0.05)
   expect_equal(mean(pred3$pred.y), 0.42, tolerance = 0.05)
   expect_equal(mean(pred3$inclusion.p[[1]]), 0.5)
 

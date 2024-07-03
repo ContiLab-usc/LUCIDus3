@@ -24,7 +24,7 @@ test_that("check predictions of LUCID with normal outcome (K = 2,2,2,2,2)", {
                                              seed = i,
                                              useY = TRUE)))
   #use training data
-  pred1 <- predict_lucid(model = fit1,
+  pred1 <- predict(model = fit1,
                          lucid_model = "parallel",
                          G = G,
                          Z = Z,
@@ -47,7 +47,7 @@ test_that("check predictions of LUCID with normal outcome (K = 2,2,2,2,2)", {
   n_CoG <- matrix(rnorm(200), nrow = 100)
 
   #use new data
-  pred2 <- predict_lucid(model = fit1,
+  pred2 <- predict(model = fit1,
                          lucid_model = "parallel",
                          G = n_G,
                          Z = n_Z,
@@ -58,7 +58,7 @@ test_that("check predictions of LUCID with normal outcome (K = 2,2,2,2,2)", {
   expect_equal(mean(pred2$pred.y), 0.03375455, tolerance = 0.05)
   expect_equal(mean(pred2$inclusion.p[[1]]), 0.5)
 
-  pred3 <- predict_lucid(model = fit1,
+  pred3 <- predict(model = fit1,
                          lucid_model = "parallel",
                          G = n_G,
                          Z = n_Z,

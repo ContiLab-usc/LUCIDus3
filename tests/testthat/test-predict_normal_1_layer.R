@@ -20,7 +20,7 @@ test_that("check prediction of lucid", {
                                              seed = i)))
 
   # make prediction
-  pred1 <- predict_lucid(model = fit1,
+  pred1 <- predict(model = fit1,
                          lucid_model = "early",
                          G = G,
                          Z = Z,
@@ -35,7 +35,7 @@ test_that("check prediction of lucid", {
   expect_equal(class(pred1$pred.x), "integer")
   expect_equal(pred1$pred.y, pred2)
 
-  pred2 <- predict_lucid(model = fit1,
+  pred2 <- predict(model = fit1,
                          lucid_model = "early",
                          G = G,
                          Z = Z,

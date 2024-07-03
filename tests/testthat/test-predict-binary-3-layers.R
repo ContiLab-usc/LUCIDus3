@@ -33,12 +33,11 @@ test_that("check prediction of LUCID with binary outcome (K = 2,2,2)", {
   n_CoG <- matrix(rnorm(200), nrow = 100)
 
   #use training data
-  pred1 <- predict_lucid(model = fit1,
+  pred1 <- predict(model = fit1,
                          lucid_model = "parallel",
                          G = G,
                          Z = Z,
                          Y = Y,
-                         g_computation = FALSE,
                          CoG = CoG, CoY = CoY, response = TRUE)
 
   expect_equal(fit1$inclusion.p, pred1$inclusion.p, tolerance = 0.05)
@@ -48,7 +47,7 @@ test_that("check prediction of LUCID with binary outcome (K = 2,2,2)", {
   expect_equal(mean(pred1$inclusion.p[[1]]), 0.5)
 
   #use new data
-  pred2 <- predict_lucid(model = fit1,
+  pred2 <- predict(model = fit1,
                          lucid_model = "parallel",
                          G = n_G,
                          Z = n_Z,
@@ -61,7 +60,7 @@ test_that("check prediction of LUCID with binary outcome (K = 2,2,2)", {
   expect_equal(mean(pred2$inclusion.p[[1]]), 0.5)
 
   #new data not using Y, and response = FALSE
-  pred3 <- predict_lucid(model = fit1,
+  pred3 <- predict(model = fit1,
                          lucid_model = "parallel",
                          G = n_G,
                          Z = n_Z,
