@@ -9,7 +9,7 @@
 \arguments{
 \item{object}{A LUCID model fitted by \code{\link{estimate_lucid}}}
 
-\item{boot.se}{An object returned by \code{\link{boot_lucid}}}
+\item{...}{Additional argument of \code{boot.se}, which is an object returned by \code{\link{boot_lucid}}}
 }
 \value{
 A list, containing the extracted key parameters from the LUCID model that can be used to print the summary table

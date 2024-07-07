@@ -10,20 +10,6 @@ plot(x, ...)
 \item{x}{A LUCID model fitted by \code{\link{estimate_lucid}}}
 
 \item{...}{Additional arguments to specify colors and fontsize}
-
-\item{G_color}{Color of node for exposure}
-
-\item{X_color}{Color of node for latent cluster}
-
-\item{Z_color}{Color of node for omics data}
-
-\item{Y_color}{Color of node for outcome}
-
-\item{pos_link_color}{Color of link corresponds to positive association}
-
-\item{neg_link_color}{Color of link corresponds to negative association}
-
-\item{fontsize}{Font size for annotation}
 }
 \value{
 A DAG graph created by \code{\link{sankeyNetwork}}

@@ -7,13 +7,6 @@
 #'
 #' @param x A LUCID model fitted by \code{\link{estimate_lucid}}
 #' @param ... Additional arguments to specify colors and fontsize
-#' @param G_color Color of node for exposure
-#' @param X_color Color of node for latent cluster
-#' @param Z_color Color of node for omics data
-#' @param Y_color Color of node for outcome
-#' @param pos_link_color Color of link corresponds to positive association
-#' @param neg_link_color Color of link corresponds to negative association
-#' @param fontsize Font size for annotation
 #'
 #' @return A DAG graph created by \code{\link{sankeyNetwork}}
 #'

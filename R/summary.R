@@ -2,8 +2,7 @@
 #' Summarize results of the early LUCID model
 #'
 #' @param object A LUCID model fitted by \code{\link{estimate_lucid}}
-#' @param boot.se An object returned by \code{\link{boot_lucid}}
-#'
+#' @param ... Additional argument of \code{boot.se}, which is an object returned by \code{\link{boot_lucid}}
 #' @return A list, containing the extracted key parameters from the LUCID model that can be used to print the summary table
 #' @export
 #' @examples 
@@ -63,7 +62,7 @@ summary.early_lucid <- function(object, ...) {
 #' Summarize results of the parallel LUCID model
 #'
 #' @param object A LUCID model fitted by \code{\link{estimate_lucid}}
-#' @param boot.se An object returned by \code{\link{boot_lucid}}
+#' @param ... Additional argument of \code{boot.se}, which is an object returned by \code{\link{boot_lucid}}
 #'
 #' @return A list, containing the extracted key parameters from the LUCID model that can be used to print the summary table
 #' @export
@@ -117,7 +116,7 @@ summary.lucid_parallel <- function(object, ...) {
 #' Summarize results of the serial LUCID model
 #'
 #' @param object A LUCID model fitted by \code{\link{estimate_lucid}}
-#' @param boot.se An object returned by \code{\link{boot_lucid}}
+#' @param ... Additional argument of \code{boot.se}, which is an object returned by \code{\link{boot_lucid}}
 #'
 #' @return A list, containing the extracted key parameters from the LUCID model that can be used to print the summary table
 #' @export
