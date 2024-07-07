@@ -12,7 +12,7 @@ plot(x, ...)
 \item{...}{Additional arguments to specify colors and fontsize}
 }
 \value{
-A DAG graph created by \code{\link{sankeyNetwork}}
+A DAG graph created by \code{\link[networkD3]{sankeyNetwork}}
 }
 \description{
 In the Sankey diagram, each node either represents a variable (exposure,
