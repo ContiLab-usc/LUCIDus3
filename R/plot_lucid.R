@@ -8,7 +8,7 @@
 #' @param x A LUCID model fitted by \code{\link{estimate_lucid}}
 #' @param ... Additional arguments to specify colors and fontsize
 #'
-#' @return A DAG graph created by \code{\link{sankeyNetwork}}
+#' @return A DAG graph created by \code{\link[networkD3]{sankeyNetwork}}
 #'
 #' @import networkD3
 #' @importFrom jsonlite toJSON
