@@ -68,8 +68,27 @@ test_that("check predictions of LUCID with normal outcome (K = 2,2,2,2,2)", {
   expect_equal(class(pred3$pred.x), "list")
   expect_equal(mean(pred3$pred.y), 0.1429235, tolerance = 0.05)
   expect_equal(mean(pred3$inclusion.p[[1]]), 0.5)
-
-
+  
+  G_gcomp_1 = G
+  G_gcomp_1[,4] = 1
+  G_gcomp_0 = G
+  G_gcomp_0[,4] = 0
+  
+  gcomp1 <- predict_lucid(model = fit1,
+                         lucid_model = "serial",
+                         G = G_gcomp_1,
+                         Z = Z,
+                         Y = NULL,
+                         g_computation = TRUE,
+                         CoG = CoG, CoY = CoY)
+  gcomp0 <- predict_lucid(model = fit1,
+                          lucid_model = "serial",
+                          G = G_gcomp_0,
+                          Z = Z,
+                          Y = NULL,
+                          g_computation = TRUE,
+                          CoG = CoG, CoY = CoY)
+  
   Z <- list(list(Z1 = Z1, Z2 = Z2), Z3 = Z3, Z4 = Z4, Z5 = Z5)
   n_Z <- list(list(Z1 = n_Z1, Z2 = n_Z2), Z3 = n_Z3, Z4 = n_Z4, Z5 = n_Z5)
   invisible(capture.output(fit1 <- estimate_lucid(G = G, Z = Z, Y = Y, K = list(list(2, 2), 2, 2, 2),
@@ -112,4 +131,20 @@ test_that("check predictions of LUCID with normal outcome (K = 2,2,2,2,2)", {
   expect_equal(class(pred3$pred.x), "list")
   expect_equal(mean(pred3$pred.y), 0.05, tolerance = 0.05)
   expect_equal(mean(pred3$inclusion.p[[2]]), 0.5)
+  
+  gcomp1 <- predict_lucid(model = fit1,
+                          lucid_model = "serial",
+                          G = G_gcomp_1,
+                          Z = Z,
+                          Y = NULL,
+                          g_computation = TRUE,
+                          CoG = CoG, CoY = CoY)
+  gcomp0 <- predict_lucid(model = fit1,
+                          lucid_model = "serial",
+                          G = G_gcomp_0,
+                          Z = Z,
+                          Y = NULL,
+                          g_computation = TRUE,
+                          CoG = CoG, CoY = CoY)
+  
 })

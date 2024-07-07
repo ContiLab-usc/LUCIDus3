@@ -20,7 +20,7 @@ test_that("check estimations of LUCID with binary outcome (K = 2)", {
                                              seed = i,
                                              useY = TRUE)))
 
-
+  summary(fit1)
   pars <- fit1
   beta_causal <- mean(pars$res_Beta[2, 2:5])
   beta_non <- mean(pars$res_Beta[2, 6:10])

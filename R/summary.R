@@ -26,7 +26,8 @@
 #' # summarize lucid model with bootstrap CIs
 #' summary(fit1, boot.se = boot1)
 #' }
-summary.early_lucid <- function(object, boot.se = NULL) {
+summary.early_lucid <- function(object, ...) {
+  args <- list(...)
   s1 <- object$select$selectG
   s2 <- object$select$selectZ
   nG <- sum(s1)
@@ -49,7 +50,7 @@ summary.early_lucid <- function(object, boot.se = NULL) {
                   K = K,
                   BIC = BIC,
                   loglik = object$likelihood,
-                  boot.se = boot.se)
+                  boot.se = args$boot.se)
   class(results) <- "sumlucid_early"
   return(results)
 }
@@ -66,7 +67,7 @@ summary.early_lucid <- function(object, boot.se = NULL) {
 #'
 #' @return A list, containing the extracted key parameters from the LUCID model that can be used to print the summary table
 #' @export
-summary.lucid_parallel <- function(object, boot.se = NULL) {
+summary.lucid_parallel <- function(object, ...) {
   ##not having regularity yet, to be added
   s1 <- object$select$selectG
   s2 <- object$select$selectZ
@@ -120,7 +121,7 @@ summary.lucid_parallel <- function(object, boot.se = NULL) {
 #'
 #' @return A list, containing the extracted key parameters from the LUCID model that can be used to print the summary table
 #' @export
-summary.lucid_serial <- function(object, boot.se = NULL){
+summary.lucid_serial <- function(object, ...){
     K = object$K
     submodels = object$submodel
     n_submodels = length(submodels)

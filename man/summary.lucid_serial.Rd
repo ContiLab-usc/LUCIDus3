@@ -4,7 +4,7 @@
 \alias{summary.lucid_serial}
 \title{Summarize results of the serial LUCID model}
 \usage{
-\method{summary}{lucid_serial}(object, boot.se = NULL)
+\method{summary}{lucid_serial}(object, ...)
 }
 \arguments{
 \item{object}{A LUCID model fitted by \code{\link{estimate_lucid}}}

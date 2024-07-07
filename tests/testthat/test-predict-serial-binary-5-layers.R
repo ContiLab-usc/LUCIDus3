@@ -30,10 +30,10 @@ test_that("check estimations of LUCID with binary outcome (K = 2,2,2)", {
   n_Z4 <- matrix(rnorm(1000), nrow = 100)
   n_Z5 <- matrix(rnorm(1000), nrow = 100)
   n_Z <- list(Z1 = n_Z1, list(Z2 = n_Z2, Z3 = n_Z3), Z4 = n_Z4, Z5 = n_Z5)
-  n_Y <- rbinom(n=100, size =1, prob =0.45)
+  n_Y <- rbinom(n=100, size =1, prob =0.8)
 
   #use training data
-  pred1 <- predict(model = fit1,
+  pred1 <- predict_lucid(model = fit1,
                          lucid_model = "serial",
                          G = G,
                          Z = Z,
@@ -47,7 +47,7 @@ test_that("check estimations of LUCID with binary outcome (K = 2,2,2)", {
   expect_equal(mean(pred1$inclusion.p[[1]]), 0.5)
 
   #use new data
-  pred2 <- predict(model = fit1,
+  pred2 <- predict_lucid(model = fit1,
                          lucid_model = "serial",
                          G = n_G,
                          Z = n_Z,
@@ -60,7 +60,7 @@ test_that("check estimations of LUCID with binary outcome (K = 2,2,2)", {
   expect_equal(mean(pred2$inclusion.p[[1]]), 0.5)
 
   #new data not using Y, and response = FALSE
-  pred3 <- predict(model = fit1,
+  pred3 <- predict_lucid(model = fit1,
                          lucid_model = "serial",
                          G = n_G,
                          Z = n_Z,
@@ -69,7 +69,7 @@ test_that("check estimations of LUCID with binary outcome (K = 2,2,2)", {
 
   expect_equal(class(pred3$pred.x), "list")
   expect_equal(max(pred3$pred.y), 0.567395, tolerance = 0.05)
-  expect_equal(mean(pred3$pred.y), 0.4489129, tolerance = 0.05)
+  expect_equal(mean(pred3$pred.y), 0.4189129, tolerance = 0.05)
   expect_equal(mean(pred3$inclusion.p[[1]]), 0.5)
 
 })

@@ -4,7 +4,7 @@
 \alias{summary.lucid_parallel}
 \title{Summarize results of the parallel LUCID model}
 \usage{
-\method{summary}{lucid_parallel}(object, boot.se = NULL)
+\method{summary}{lucid_parallel}(object, ...)
 }
 \arguments{
 \item{object}{A LUCID model fitted by \code{\link{estimate_lucid}}}

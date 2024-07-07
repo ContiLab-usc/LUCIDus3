@@ -4,7 +4,7 @@
 \alias{summary.early_lucid}
 \title{Summarize results of the early LUCID model}
 \usage{
-\method{summary}{early_lucid}(object, boot.se = NULL)
+\method{summary}{early_lucid}(object, ...)
 }
 \arguments{
 \item{object}{A LUCID model fitted by \code{\link{estimate_lucid}}}
