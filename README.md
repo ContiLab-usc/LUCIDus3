@@ -1,23 +1,11 @@
 
-# LUCIDus 3.1.2: LUCID with Multiple Omics Data (The CRAN Version is 3.0.1)
+# LUCIDus 3.0.3: LUCID with Multiple Omics Data 
 
-This repository contains the source code for LUCIDus 3.1.2, which has not yet been pushed to CRAN. The current CRAN version of LUCIDus is 3.0.1 (see below).
+This repository contains the source code for LUCIDus 3.0.3.
 
-Compared to version 3.0.1, LUCIDus 3.1.2 includes several significant updates but they are all work in progress:
-
-Bug fixes for extreme cases.
-Automated model selection for each LUCID model to determine the optimal number of latent clusters.
-An integrated imputation approach for handling sporadic and list-wise missing multi-omics data.
-Improved regularity for LUCID in parallel.
-G-computation features for causal interpretation of exposure parameters.
-Fixed missing data imputation for LUCID in parallel with list-wise missingness.
-New plotting functions.
-Bootstrapping for parallel processing (LC = 2 for each layer).
-To utilize these new features, please download and use LUCIDus 3.1.2. If you prefer a more complete version just for model building, download LUCIDus 3.0.1 from CRAN. Details for version 3.0.1 can be found below.
-
-The **LUCIDus** package implements the statistical method LUCID proposed in the research paper [A Latent Unknown Clustering Integrating
+The **LUCIDus** package implements the statistical method LUCID originally proposed in the research paper [A Latent Unknown Clustering Integrating
 Multi-Omics Data (LUCID) with Phenotypic Traits](https://doi.org/10.1093/bioinformatics/btz667)
-(*Bioinformatics*, 2020). LUCID conducts integrated clustering by using multi-view data, including exposures, and omics data with/without outcome. **LUCIDus** features variable selection, incorporating missingness in omics data, visualization of the LUCID model via Sankey diagram, bootstrap inference, and functions for tuning model parameters.
+(*Bioinformatics*, 2020). LUCID conducts integrated clustering by using multi-view data, including genetic or environmental exposures, and omics data with/without outcome. **LUCIDus** features variable selection, incorporating missingness in omics data, visualization of the LUCID model via Sankey diagram, bootstrap inference, and functions for tuning model parameters. We then extended the single-omic LUCID model to multi-omics.
 
 # LUCID version 3.0.1
 <!-- badges: start -->
