@@ -8,7 +8,7 @@
 
 This repository contains the source code for LUCIDus Version 3.0.3. The **LUCIDus** package implements the statistical method LUCID originally proposed in the research paper [A Latent Unknown Clustering Integrating
 Multi-Omics Data (LUCID) with Phenotypic Traits](https://doi.org/10.1093/bioinformatics/btz667)
-(*Bioinformatics*, 2020). The original LUCID conducts integrated clustering by using multi-view data, including genetic or environmental exposures, single-layer omics data, and  with/without outcome. **LUCIDus** features variable selection, incorporating missingness in omics data, visualization of the LUCID model via Sankey diagram, bootstrap inference, and functions for tuning model parameters. The missing data imputation mechanism was introduced in [An extension of latent unknown clustering integrating multi-omics data (LUCID) incorporating incomplete omics data](https://doi.org/10.1093/bioadv/vbae123)(*Bioinformatics Advances*,2024). We then extended the single-omic LUCID model to multi-omics in this research paper [LUCIDus: An R Package For Implementing Latent Unknown Clustering By Integrating Multi-omics Data (LUCID) With Phenotypic Traits](https://journal.r-project.org/articles/RJ-2024-012/)(*R Journal*,2024).
+(*Bioinformatics*, 2020). The original LUCID conducts integrated clustering by using multi-view data, including genetic or environmental exposures, single-layer omics data, and  with/without outcome. **LUCIDus** features variable selection, incorporating missingness in omics data, visualization of the LUCID model via Sankey diagram, bootstrap inference, and functions for tuning model parameters. The missing data imputation mechanism was introduced in [An extension of latent unknown clustering integrating multi-omics data (LUCID) incorporating incomplete omics data ](https://doi.org/10.1093/bioadv/vbae123)(*Bioinformatics Advances*,2024). We then extended the single-omic LUCID model to multi-omics in this research paper [LUCIDus: An R Package For Implementing Latent Unknown Clustering By Integrating Multi-omics Data (LUCID) With Phenotypic Traits ](https://journal.r-project.org/articles/RJ-2024-012/)(*R Journal*,2024).
 
  **LUCID version 3**, a major update and enhancement from the original release, implements different integration strategies for multi-omics data with multiple layers, including LUCID early integration (early integration), LUCID in parallel (intermediate integration), and LUCID in serial (late integration). The following DAG illustrates the three different LUCID models for three integration strategies.
 
@@ -39,7 +39,7 @@ The following figure illustrates the workflow of LUCIDus 3.0.3.
 
 ## Usage
 
-Please refer to Section 3 of the [R Journal article](https://journal.r-project.org/articles/RJ-2024-012/) for a full workflow illustration with real data.
+Please refer to Section 3 of the [R Journal article ](https://journal.r-project.org/articles/RJ-2024-012/) for a full workflow illustration with real data.
 
 Below are minimal examples showing the simplest usage of `lucid()` under **early**, **intermediate**, and **late** integrations.  
 ---
@@ -72,7 +72,7 @@ fit_early <- lucid(
 summary(fit_early)
 ```
 
-### Minimal Example: Parallel Integration
+### Minimal Example: LUCID in Parallel 
 
 ---
 ```r
@@ -100,7 +100,7 @@ fit_parallel <- lucid(
 summary(fit_parallel)
 ```
 
-### Minimal Example: Serial Integration
+### Minimal Example: LUCID in Serial
 
 ---
 ```r
@@ -152,21 +152,12 @@ https://journal.r-project.org/articles/RJ-2024-012/
 
 ---
 
-### **3. LUCID with Missing-Data Imputation (If the Missing Data Imputation Mechanism is Used)**
+### **3. LUCID with Missing-Data Imputation (If the Missing Data Imputation Mechanism is Applied)**
 
 Zhao Y., Jia Q., Goodrich J., Darst B., Conti D.V. (2024).  
 **An extension of latent unknown clustering integrating multi-omics data (LUCID) incorporating incomplete omics data.**  
 *Bioinformatics Advances*, 4(1), vbae123.  
 https://doi.org/10.1093/bioadv/vbae123
 
----
 
-### **BibTeX**
-
-You may obtain BibTeX entries in R using:
-
-```r
-print(citation("LUCIDus"), bibtex = TRUE)
-toBibtex(citation("LUCIDus"))
-options(citation.bibtex.max = 999)
 
