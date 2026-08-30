@@ -1,2 +1,14 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^docs$
+^\.DS_Store$
+^R/\.DS_Store$
+^tests/\.DS_Store$
+^\.Rhistory$
+^R/\.Rhistory$
+^\.\.?Rcheck$
+^LUCIDus\.Rcheck$
+^LUCIDus_[0-9.-]+\.tar\.gz$
+^README\.Rmd$
+^README\.html$
+^LUCIDus-manual\.pdf$

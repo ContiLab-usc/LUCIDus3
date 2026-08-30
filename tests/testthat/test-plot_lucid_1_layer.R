@@ -16,9 +16,21 @@ test_that("check whether plot_lucid function could work", {
                                              family = "normal",
                                              K = 2,
                                              seed = i)))
-  plot1 <- plot_lucid(fit1)
-  plot2 <- plot_lucid(fit1, G_color = "black", X_color = "red",
+  plot1 <- plot(fit1)
+  plot2 <- plot(fit1, G_color = "black", X_color = "red",
                       pos_link_color = "green", fontsize = 10)
   expect_equal(class(plot1), c("sankeyNetwork", "htmlwidget"))
   expect_equal(class(plot2), c("sankeyNetwork", "htmlwidget"))
+})
+
+test_that("plot.early_lucid rejects a non-early_lucid object with a clear message", {
+  # Previously the only plot method with zero input validation. Since S3
+  # dispatch through plot() already guarantees inherits(x, "early_lucid"),
+  # this guards a direct call to the method (an exported function, so nothing
+  # stops that) with a malformed object, matching pred_lucid()'s own defensive
+  # class checks.
+  expect_error(plot.early_lucid(structure(list(), class = "lm")),
+               "must be a fitted early_lucid model")
+  expect_error(plot.early_lucid(structure(list(), class = "lucid_parallel")),
+               "must be a fitted early_lucid model")
 })

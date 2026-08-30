@@ -32,7 +32,7 @@ test_that("check variable selection on G", {
 
   # compare prediction of X
   expect_equal(fit1$inclusion.p, pred1$inclusion.p, tolerance = 0.05)
-  expect_equal(class(pred1$pred.x), "integer")
+  expect_equal(class(pred1$pred.x), "numeric")
 
   pred2 <- predict_lucid(model = fit1,
                          lucid_model = "early",
@@ -41,7 +41,7 @@ test_that("check variable selection on G", {
                          Y = NULL,
                          CoY = cov)
 
-  expect_equal(class(pred2$pred.x), "integer")
+  expect_equal(class(pred2$pred.x), "numeric")
   
 
   counter_G_v1_1 <- G

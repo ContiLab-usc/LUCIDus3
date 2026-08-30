@@ -1,0 +1,664 @@
+---
+title: "Reproducing the R Journal paper examples with LUCIDus 3.1.0"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+params:
+  full_grid: TRUE
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  error = TRUE,      # a failing example prints its condition and the knit continues
+  message = FALSE,
+  warning = FALSE,
+  collapse = FALSE,
+  comment = "#>"
+)
+```
+
+## Purpose
+
+This document runs **every code example** from
+
+> Zhao Y, Jia Q, Goodrich JA, Conti DV (2024).
+> *LUCIDus: An R Package For Implementing Latent Unknown Clustering By
+> Integrating Multi-omics Data (LUCID) With Phenotypic Traits.*
+> The R Journal 16/2, 4–26. (RJ-2024-012)
+
+against the current package, to confirm that all of them still run.
+
+**Numeric results are not expected to match the paper.** Version 3.1.0 corrects
+several values that earlier versions reported incorrectly — including the
+log-likelihood, the BIC, and the coding of the outcome coefficients. Wherever
+output legitimately differs, a short note explains why and points at the
+corresponding `NEWS.md` entry. Two of the paper's examples (`fit10` and `fit12`)
+did not run at all before 3.1.0.
+
+Every chunk is set with `error = TRUE`, so a failure is displayed and the knit
+carries on rather than hiding the remaining examples. A status table at the end
+lists the outcome of each one.
+
+### Requirements
+
+```{r requirements}
+required_version <- "3.1.0"
+suppressPackageStartupMessages(library(LUCIDus))
+installed <- as.character(utils::packageVersion("LUCIDus"))
+cat("LUCIDus version loaded:", installed, "\n")
+if (utils::compareVersion(installed, required_version) < 0) {
+  warning(
+    "This document targets LUCIDus >= ", required_version, " but version ",
+    installed, " is loaded.\n",
+    "Several examples below (fit10, fit12) abort on earlier versions.\n",
+    "Install the corrected package first, e.g.:\n",
+    "  R CMD INSTALL /Users/qiranjia19961112/Desktop/LUCIDus-3.0"
+  )
+}
+```
+
+`ggplot2` is needed for the BIC figure in Section 3.3 and `visdat` for the
+missingness plots in Section 3.6. Note that the paper calls `ggplot()` without
+ever loading **ggplot2**; that is added here.
+
+```{r libs}
+library(ggplot2)   # not loaded in the paper, but required by its BIC figure
+library(visdat)
+```
+
+### Run configuration
+
+The paper's heaviest calls tune a 41-value penalty grid, run graphical lasso on
+210 features, and draw 200 bootstrap replicates each. With `full_grid: TRUE`
+(the default) the arguments below are **exactly** those printed in the paper.
+Set `full_grid: FALSE` in the YAML header to re-knit quickly with coarser grids.
+
+```{r config}
+K_GRID     <- if (params$full_grid) 2:6                     else 2:4
+RHO_G      <- if (params$full_grid) seq(0, 0.4, by = 0.01)  else c(0, 0.1, 0.2)
+RHO_ZMU    <- if (params$full_grid) 5:10                    else c(5, 10)
+RHO_ZCOV   <- if (params$full_grid) seq(0.1, 0.4, by = 0.1) else c(0.1, 0.4)
+N_NOISE_HI <- if (params$full_grid) 200                     else 40
+BOOT_R     <- if (params$full_grid) 200                     else 25
+
+data.frame(
+  argument   = c("K (fit8/tune_K)", "Rho_G (fit10)", "Rho_Z_Mu (fit11)",
+                 "Rho_Z_Cov (fit11)", "noise features (fit13)", "R (boot1/boot2)"),
+  paper      = c("2:6", "seq(0, 0.4, by = 0.01)", "5:10",
+                 "seq(0.1, 0.4, by = 0.1)", "200", "200"),
+  this_run   = c(deparse(K_GRID), sprintf("%d values, %g..%g", length(RHO_G),
+                 min(RHO_G), max(RHO_G)), deparse(RHO_ZMU),
+                 sprintf("%d values", length(RHO_ZCOV)), N_NOISE_HI, BOOT_R)
+)
+```
+
+```{r registry, include = FALSE}
+# Status registry.  Kept out of the displayed code so every example below stays
+# verbatim; the hidden chunks after each example record whether it ran.
+.reg <- new.env(parent = emptyenv())
+.reg$rows <- list()
+
+check_obj <- function(name, expected_class = NULL, section = "") {
+  ok  <- exists(name, envir = globalenv(), inherits = FALSE)
+  cls <- if (ok) class(get(name, envir = globalenv()))[1] else NA_character_
+  status <- if (!ok) {
+    "ERRORED"
+  } else if (!is.null(expected_class) &&
+             !inherits(get(name, envir = globalenv()), expected_class)) {
+    "ran (unexpected class)"
+  } else {
+    "ran"
+  }
+  .reg$rows[[length(.reg$rows) + 1L]] <- data.frame(
+    section = section, example = name,
+    expected = if (is.null(expected_class)) "-" else expected_class,
+    got = cls, status = status, stringsAsFactors = FALSE
+  )
+  invisible(NULL)
+}
+
+check_expr <- function(label, expr, section = "") {
+  res <- try(force(expr), silent = TRUE)
+  .reg$rows[[length(.reg$rows) + 1L]] <- data.frame(
+    section = section, example = label, expected = "call", got = "-",
+    status = if (inherits(res, "try-error")) "ERRORED" else "ran",
+    stringsAsFactors = FALSE
+  )
+  invisible(NULL)
+}
+
+.t0 <- Sys.time()
+```
+
+---
+
+# 3.1 Fitting a LUCID model
+
+## Loading and organising the data
+
+```{r data}
+library(LUCIDus)
+# load data
+data("simulated_HELIX_data")
+simulated_data <- simulated_HELIX_data
+exposome <- as.matrix(simulated_data[["phenotype"]]$hs_hg_m_scaled)
+colnames(exposome) <- "hs_hg_m_scaled"
+methylomics <- simulated_data$methylome
+ck18 <- as.matrix(simulated_data[["phenotype"]]$ck18_scaled)
+colnames(ck18) <- "ck18_scaled"
+ck18_cat <- ifelse(ck18 > mean(ck18), 1, 0)
+covars <- c("hs_child_age_yrs_None","e3_sex_None")
+covs <- simulated_data[["phenotype"]][covars]
+covs$e3_sex_None <- ifelse(covs$e3_sex_None == "male", 1, 0)
+```
+
+## `fit1`, `fit2` — continuous and binary outcomes
+
+```{r fit1-fit2}
+# Fit a LUCID model with a continuous outcome
+fit1 <- lucid(G = exposome, Z = methylomics, Y = ck18, init_omic.data.model = NULL,
+              lucid_model = "early", family = "normal", K = 2)
+# MLE of the LUCID model
+# fit1$res_Beta
+# fit1$res_Mu
+# fit1$res_Sigma
+# fit1$res_Gamma
+# IPs of the sample
+# fit1$inclusion.p
+# Fit LUCID model with a binary outcome
+fit2 <- lucid(G = exposome, Z = methylomics, Y = ck18_cat, init_omic.data.model = NULL,
+              lucid_model = "early", family = "binary", K = 2)
+```
+
+A note beyond the paper text -- `fit1` is a plain R list, and every field on
+it is documented on `?estimate_lucid`'s `@return`:
+
+```{r fit1-object-structure}
+names(fit1)
+```
+
+```{r chk1, include = FALSE}
+check_obj("fit1", "early_lucid", "3.1 fitting")
+check_obj("fit2", "early_lucid", "3.1 fitting")
+```
+
+## `fit3.1`, `fit3.2`, `fit4` — initialisation
+
+```{r fit3-fit4}
+# Fit LUCID model with spherical shape, equal volume
+fit3.1 <- lucid(G = exposome, Z = methylomics, Y = ck18,
+                lucid_model = "early", family = "normal", K = 2,
+                init_par = "mclust", init_omic.data.model = "EII")
+# Fit LUCID model with random guess
+fit3.2 <- lucid(G = exposome, Z = methylomics, Y = ck18,
+                lucid_model = "early", family = "normal", K = 2,
+                init_par = "random")
+# Fit LUCID model with ellipsoidal shape, varying volume, shape, and orientation
+fit4 <- lucid(G = exposome, Z = methylomics, Y = ck18,
+              lucid_model = "early", family = "normal", K = 2,
+              init_omic.data.model = "VVV")
+```
+
+```{r chk2, include = FALSE}
+check_obj("fit3.1", "early_lucid", "3.1 initialisation")
+check_obj("fit3.2", "early_lucid", "3.1 initialisation")
+check_obj("fit4", "early_lucid", "3.1 initialisation")
+```
+
+## `fit5` — unsupervised LUCID
+
+```{r fit5}
+# Fit an unsupervised LUCID model
+fit5 <- lucid(G = exposome, Z = methylomics, Y = ck18, lucid_model = "early",
+              family = "normal", K = 2, useY = FALSE)
+```
+
+```{r chk3, include = FALSE}
+check_obj("fit5", "early_lucid", "3.1 unsupervised")
+```
+
+## `fit6`, `fit7` — adjusting for covariates
+
+```{r fit6-fit7}
+# Include covariates as G to X covariates
+fit6 <- lucid(G = exposome, Z = methylomics, Y = ck18, lucid_model = "early", K = 2,
+              family = "normal", CoG = covs)
+# Include covariates as X to Y covariates
+fit7 <- lucid(G = exposome, Z = methylomics, Y = ck18, lucid_model = "early", K = 2,
+              family = "normal", CoY = covs)
+```
+
+```{r chk4, include = FALSE}
+check_obj("fit6", "early_lucid", "3.1 covariates")
+check_obj("fit7", "early_lucid", "3.1 covariates")
+```
+
+---
+
+# 3.2 Interpreting LUCID
+
+## `summary(fit1)`
+
+> **Differs from the paper, by design.** Three things changed in 3.1.0:
+>
+> * The **log-likelihood** is now the observed-data log-likelihood of the fitted
+>   model. Version 3.0.3 printed `-6721.801` for this fit; the correct value at
+>   3.0.3's own estimates is `-6575.88`.
+> * The **BIC** inherited that error, and additionally counted `K*M^2`
+>   covariance parameters instead of Eq 13's `K*M(M+1)/2`.
+> * The **outcome coefficients** are now genuinely reference-coded: an intercept
+>   equal to cluster 1's level, plus explicit contrasts. The paper's
+>   `cluster2 = 0.504` was in fact cluster 2's *own mean*, printed under a
+>   `cluster1 = 0` heading as though it were a contrast. The real contrast
+>   between the two clusters is about `1.044`.
+>
+> The omics means and the exposure odds ratio should closely match the paper.
+
+```{r summary-fit1}
+# summarize a simple lucid model with a continuous outcome
+summary(fit1)
+```
+
+```{r chk5, include = FALSE}
+check_expr("summary(fit1)", summary(fit1, auto_print = FALSE), "3.2 interpretation")
+```
+
+## `plot(fit1)` — Sankey diagrams
+
+```{r plot1}
+# Visualize LUCID model via a Sankey diagram
+plot(fit1)
+```
+
+```{r plot2}
+# Change the node color
+plot(fit1, G_color = "yellow")
+```
+
+```{r plot3}
+# Change the link color
+plot(fit1, pos_link_color = "red", neg_link_color = "green")
+```
+
+```{r chk6, include = FALSE}
+check_expr("plot(fit1)", plot(fit1), "3.2 interpretation")
+check_expr("plot(fit1, G_color=)", plot(fit1, G_color = "yellow"), "3.2 interpretation")
+check_expr("plot(fit1, link colors)",
+           plot(fit1, pos_link_color = "red", neg_link_color = "green"),
+           "3.2 interpretation")
+```
+
+---
+
+# 3.3 Model selection and variable selection
+
+## `fit8` — choosing K
+
+> BIC values differ from the paper's Figure 4 for the reasons given above. The
+> *selected* K should still be 2.
+
+```{r fit8}
+fit8 <- lucid(G = exposome, Z = methylomics, Y = ck18, lucid_model = "early",
+              family = "normal", K = K_GRID)
+# Check the optimal K
+fit8$K
+```
+
+```{r chk7, include = FALSE}
+check_obj("fit8", "early_lucid", "3.3 model selection")
+```
+
+## `tune_lucid()` and the BIC figure
+
+```{r tune}
+# Look into the tuning process in more detail
+tune_K <- tune_lucid(G = exposome, Z = methylomics, Y = ck18, lucid_model = "early",
+                     family = "normal", K = K_GRID)
+fit9 <- tune_K$best_model
+```
+
+```{r bicplot, fig.width = 6, fig.height = 4}
+ggplot(data = tune_K$tune_list, aes(x = K, y = BIC, label = round(BIC, 0))) +
+  geom_point() +
+  geom_line() +
+  geom_text(hjust = -0.2)
+```
+
+```{r chk8, include = FALSE}
+check_obj("tune_K", "list", "3.3 model selection")
+check_obj("fit9", "early_lucid", "3.3 model selection")
+```
+
+## `fit10` — variable selection for G
+
+> **This example did not run before 3.1.0.** When exactly one exposure survived
+> selection, `lucid()` carried the tuned `Rho_G` into the post-selection refit,
+> where the lasso requires at least two exposures, and the call aborted with
+> `At least 2 exposure variables are needed for variable selection`. The refit
+> on selected features is now unpenalised.
+
+```{r fit10}
+# Variable selection for G
+# Add 10 more noise variables to the exposome
+noise <- matrix(rnorm(420 * 10), nrow = 420)
+exposome_noise <- cbind(exposome, noise)
+fit10 <- lucid(G = exposome_noise, Z = methylomics, Y = ck18,
+               lucid_model = "early", family = "normal", K = 2,
+               Rho_G = RHO_G, seed = 1008)
+# Summary of optimal lucid model
+# summary(fit10)
+```
+
+```{r chk9, include = FALSE}
+check_obj("fit10", "early_lucid", "3.3 variable selection")
+```
+
+## `fit11` — variable selection for Z
+
+```{r fit11}
+# Variable selection for Z
+# add 10 more noise variables to the methylomics
+methylomics_noise <- cbind(methylomics, noise)
+fit11 <- lucid(G = exposome, Z = methylomics_noise, Y = ck18,
+               lucid_model = "early", family = "normal", K = 2,
+               Rho_Z_Mu = RHO_ZMU, Rho_Z_Cov = RHO_ZCOV, seed = 1008)
+# Summary of optimal lucid model
+# summary(fit11)
+```
+
+```{r chk10, include = FALSE}
+check_obj("fit11", "early_lucid", "3.3 variable selection")
+```
+
+## `fit12` — joint selection for G and Z
+
+> Also affected by the refit defect above; this example likewise did not
+> complete before 3.1.0.
+
+```{r fit12}
+# Variable selection for G and Z jointly
+fit12 <- lucid(G = exposome_noise, Z = methylomics_noise, Y = ck18,
+               lucid_model = "early", family = "normal", K = 2,
+               Rho_G = 0.01, Rho_Z_Mu = 10, Rho_Z_Cov = 0.5, seed = 123)
+```
+
+```{r chk11, include = FALSE}
+check_obj("fit12", "early_lucid", "3.3 variable selection")
+```
+
+## `fit13` — high-dimensional Z
+
+```{r fit13}
+# Variable selection for Z (high number of features M)
+set.seed(1008)
+# Add 200 more noise features to the methylomics
+noise <- matrix(rnorm(420 * N_NOISE_HI), nrow = 420)
+methylomics_noise <- cbind(methylomics, noise)
+fit13 <- lucid(G = exposome, Z = methylomics_noise, Y = ck18,
+               family = "normal", lucid_model = "early", K = 2,
+               Rho_Z_Mu = 20, Rho_Z_Cov = 0.6)
+# Summary of optimal lucid model
+# summary(fit13)
+```
+
+```{r chk12, include = FALSE}
+check_obj("fit13", "early_lucid", "3.3 variable selection")
+```
+
+---
+
+# 3.4 Deriving confidence intervals
+
+> In 3.1.0 the bootstrap point estimate `t0` is taken from the model you supply
+> rather than from a refit under a fresh random seed, so the `estimate` column
+> below now agrees with `summary(fit1)`. Failed replicates are also counted and
+> warned about instead of being silently dropped.
+
+```{r boot}
+# Bootstrap to obtain 95% CI (by default) for LUCID
+set.seed(123)
+boot1 <- boot_lucid(G = exposome, Z = methylomics, Y = ck18,
+                    model = fit1, R = BOOT_R)
+# 90% CIs
+boot2 <- boot_lucid(G = exposome, Z = methylomics, Y = ck18,
+                    model = fit1, R = BOOT_R, conf = 0.9)
+```
+
+The paper prints this call as `summary(fit1, boot.se = boot1))`, which has an
+unbalanced closing parenthesis and is a typo in the article. Corrected here:
+
+```{r boot-summary}
+# Summary table with 95% bootstrap CIs
+summary(fit1, boot.se = boot1)
+```
+
+```{r chk13, include = FALSE}
+check_obj("boot1", "list", "3.4 inference")
+check_obj("boot2", "list", "3.4 inference")
+check_expr("summary(fit1, boot.se = boot1)",
+           summary(fit1, boot.se = boot1, auto_print = FALSE), "3.4 inference")
+```
+
+---
+
+# 3.5 Prediction
+
+> **Now matches the paper for the first time.** The article prints
+> `table(pred1$pred.x)` with labels `1` and `2`, but the shipped code returned
+> `0` and `1` in both 3.0.3 and pre-fix 3.1.0. Cluster labels are now `1..K`
+> throughout, consistent with Eq 21, `summary()`, and the `inclusion.p` columns.
+> The counts themselves will differ from the paper's 223/197.
+
+```{r predict}
+# Predict cluster with information of Y
+pred1 <- predict_lucid(model = fit1, G = exposome, Z = methylomics, Y = ck18)
+# Predict cluster without information of Y
+pred2 <- predict_lucid(model = fit1, G = exposome, Z = methylomics)
+# Predicted cluster label
+table(pred1$pred.x)
+# Predicted outcome
+pred1$pred.y[1:5]
+```
+
+```{r chk14, include = FALSE}
+check_obj("pred1", "list", "3.5 prediction")
+check_obj("pred2", "list", "3.5 prediction")
+```
+
+---
+
+# 3.6 Incorporating missingness in multi-omics data
+
+Two quirks in the paper's own setup are reproduced verbatim rather than
+corrected, so that this section matches the article:
+
+* `arrayInd(sample(1000, 0.1 * 1000), dim(methylomics))` draws from the first
+  1000 of the 4200 cells in `methylomics`, so the realised sporadic missingness
+  rate is about 2.4%, not the 10% the expression suggests.
+* `methylomics_miss_listwise[sample(1:100, 30), ]` selects list-wise rows only
+  from the first 100 of 420 observations.
+
+```{r missing-setup, fig.width = 7, fig.height = 4}
+library(visdat)
+set.seed(1)
+methylomics_miss_sporadic <- methylomics_miss_listwise <- as.matrix(methylomics)
+index <- arrayInd(sample(1000, 0.1 * 1000), dim(methylomics))
+methylomics_miss_sporadic[index] <- NA # sporadic missing pattern
+methylomics_miss_listwise[sample(1:100, 30), ] <- NA # listwise missing pattern
+vis_miss(as.data.frame(methylomics_miss_sporadic))
+```
+
+```{r missing-plot2, fig.width = 7, fig.height = 4}
+vis_miss(as.data.frame(methylomics_miss_listwise))
+```
+
+```{r fit14-fit15}
+fit14 <- lucid(G = exposome, Z = methylomics_miss_listwise, Y = ck18,
+               lucid_model = "early", K = 2, family = "normal")
+fit15 <- lucid(G = exposome, Z = methylomics_miss_sporadic, Y = ck18,
+               lucid_model = "early", K = 2, family = "normal")
+# summary(fit15)
+```
+
+```{r chk15, include = FALSE}
+check_obj("fit14", "early_lucid", "3.6 missing data")
+check_obj("fit15", "early_lucid", "3.6 missing data")
+```
+
+A check the paper does not perform — that list-wise rows are returned as `NA`
+rather than filled with fabricated values, and that observed cells are never
+altered:
+
+```{r missing-invariants}
+lw <- which(rowSums(is.na(methylomics_miss_listwise)) == ncol(methylomics_miss_listwise))
+cat("list-wise rows still NA in fit14$Z:      ", all(is.na(fit14$Z[lw, ])), "\n")
+obs <- !is.na(methylomics_miss_sporadic)
+cat("observed cells unchanged in fit15$Z:     ",
+    isTRUE(all.equal(fit15$Z[obs], methylomics_miss_sporadic[obs])), "\n")
+cat("sporadic cells imputed and finite:       ",
+    all(is.finite(fit15$Z[!obs])), "\n")
+```
+
+---
+
+# 3.7 LUCID in Parallel
+
+> `summary(fit)$BIC` now resolves for parallel and serial models; it was
+> previously an early-model-only field that returned `NULL` elsewhere.
+
+```{r fit16}
+# Create a list of multi-omics data
+omics_lst <- simulated_data[-which(names(simulated_data) == "phenotype")]
+Z = omics_lst[c(1:3)]
+# LUCID in parallel, adjusting for the covariates for the E-X and X-Y associations
+fit16 <- lucid(G = exposome, Z = Z, Y = ck18, K = list(2, 2, 2), family = "normal",
+               CoY = covs, CoG = covs,
+               lucid_model = "parallel", useY = TRUE)
+# print the summary of the LUCID in parallel model
+summary(fit16)
+```
+
+Beyond the paper text: `fit16`'s object structure. Two fields differ from
+`fit1` above -- `N` (sample size) is present here but not for early, and
+`z` (the joint E-step responsibility array across layers, before it is
+marginalized into `inclusion.p`) appears only for parallel.
+
+```{r fit16-object-structure}
+names(fit16)
+```
+
+```{r fit17}
+# LUCID in parallel, tune for the number of clusters for methylomics
+fit17 <- lucid(G = exposome, Z = Z, Y = ck18, K = list(2, 2:3, 2), family = "normal",
+               lucid_model = "parallel", useY = TRUE)
+# summary(fit17)
+```
+
+```{r chk16, include = FALSE}
+check_obj("fit16", "lucid_parallel", "3.7 parallel")
+check_obj("fit17", "lucid_parallel", "3.7 parallel")
+check_expr("summary(fit16)", summary(fit16, auto_print = FALSE), "3.7 parallel")
+```
+
+---
+
+# 3.8 LUCID in Serial
+
+```{r fit18}
+# LUCID in serial, adjusting for the covariates of the E-X and X-Y associations
+# Tune the number of clusters for methylome and transcriptome
+# All 3 sub-models are LUCID early integration models and each with two latent
+# clusters for each layer
+fit18 <- lucid(G = exposome, Z = Z, Y = ck18,
+               lucid_model = "serial", CoY = covs, CoG = covs,
+               K = list(2:3, 2:3, 2), useY = TRUE, family = "normal")
+# Print the summary of the LUCID in serial model
+summary(fit18)
+```
+
+Beyond the paper text: `fit18`'s object structure. Serial adds `submodel`
+(the fitted stage models, each a complete `early_lucid`/`lucid_parallel`
+object) and `res_Delta` (between-stage transition coefficients).
+`likelihood` and `select` are present, same as early/parallel, but are
+aggregates over stages: `likelihood` sums each stage's own log-likelihood
+(a serial chain has no single joint EM loop to report one from), and
+`select` is stage 1's own selection only -- the one stage whose `G` is the
+cohort's real exposures, not a previous stage's cluster probabilities.
+
+```{r fit18-object-structure}
+names(fit18)
+cat("top-level likelihood (sum over stages):", fit18$likelihood, "\n")
+cat("top-level select is stage 1's select:",
+    identical(fit18$select, fit18$submodel[[1]]$select), "\n")
+```
+
+```{r fit19}
+# LUCID in serial with the first sub-model being LUCID in parallel
+# and the second sub-model being LUCID early integration
+# Rearrange the omics list to match the new structure of the LUCID in serial model
+Z_new = list(list(omics_lst$methylome, omics_lst$transcriptome), omics_lst$miRNA)
+# Fit the LUCID in serial model with the new omics list and the new K list
+fit19 <- lucid(G = exposome, Z = Z_new, Y = ck18,
+               lucid_model = "serial", CoY = covs, CoG = covs,
+               K = list(list(2, 2), 2), useY = TRUE, family = "normal")
+# summary(fit19)
+```
+
+```{r chk17, include = FALSE}
+check_obj("fit18", "lucid_serial", "3.8 serial")
+check_obj("fit19", "lucid_serial", "3.8 serial")
+check_expr("summary(fit18)", summary(fit18, auto_print = FALSE), "3.8 serial")
+```
+
+---
+
+# Status of every example
+
+```{r status, echo = FALSE}
+status <- do.call(rbind, .reg$rows)
+knitr::kable(status, row.names = FALSE)
+```
+
+```{r status-summary, echo = FALSE}
+n_ok  <- sum(status$status == "ran")
+n_bad <- sum(status$status != "ran")
+cat(sprintf("%d of %d examples ran; %d errored.\n", n_ok, nrow(status), n_bad))
+if (n_bad > 0) {
+  cat("\nExamples that did not run:\n")
+  print(status[status$status != "ran", c("section", "example", "status")],
+        row.names = FALSE)
+}
+cat(sprintf("\nTotal knit time: %.1f minutes (full_grid = %s)\n",
+            as.numeric(difftime(Sys.time(), .t0, units = "mins")),
+            params$full_grid))
+```
+
+# Spot checks against known-correct values
+
+Invariants established independently of the paper (see `NEWS.md`):
+
+```{r spotchecks, echo = FALSE}
+chk <- function(label, value, expected, tol = NA) {
+  ok <- if (is.na(tol)) isTRUE(all.equal(value, expected))
+        else isTRUE(abs(value - expected) < tol)
+  data.frame(check = label, observed = format(value), expected = format(expected),
+             ok = ok, stringsAsFactors = FALSE)
+}
+s1 <- summary(fit1, auto_print = FALSE)
+rows <- list(
+  chk("fit1 log-likelihood", round(fit1$likelihood, 2), -6575.89, tol = 0.5),
+  chk("fit1 number of parameters", s1$model_fit$n_parameters, 136),
+  chk("fit8 selected K", fit8$K, 2L),
+  chk("pred.x labels are 1..K", paste(sort(unique(pred1$pred.x)), collapse = ","), "1,2"),
+  chk("fit1 converged", fit1$em_control$converged, TRUE)
+)
+knitr::kable(do.call(rbind, rows), row.names = FALSE)
+```
+
+# Session information
+
+```{r session, echo = FALSE}
+sessionInfo()
+```

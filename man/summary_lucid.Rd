@@ -2,40 +2,88 @@
 % Please edit documentation in R/summary.R
 \name{summary_lucid}
 \alias{summary_lucid}
-\title{Summarize results of the LUCID model}
+\alias{summary.early_lucid}
+\title{Summarize results of the early LUCID model}
 \usage{
-summary_lucid(object, boot.se = NULL)
+summary_lucid(object, ...)
+
+\method{summary}{early_lucid}(object, ...)
 }
 \arguments{
-\item{object}{A LUCID model fitted by \code{\link{estimate_lucid}}}
+\item{object}{A LUCID model fitted by \code{\link{estimate_lucid}} or
+\code{\link{lucid}}.}
 
-\item{boot.se}{An object returned by \code{\link{boot_lucid}},
-which contains the bootstrap confidence intervals}
+\item{...}{Additional arguments. \code{boot.se} accepts an object returned by
+\code{\link{boot_lucid}}, whose confidence limits are then shown alongside
+the point estimates. \code{auto_print = FALSE} suppresses printing and
+returns the summary list only.}
 }
 \value{
-A list, containing the extracted key parameters from the LUCID model that can be used to print the summary table
+A list of class \code{sumlucid_early} with components:
+\describe{
+\item{BIC, loglik}{The Bayesian information criterion and the
+observed-data log-likelihood at the estimates. Also repeated inside
+\code{model_fit}, alongside \code{n_parameters}, the effective
+parameter count the BIC charges (Eq 13, reduced per Eq 18 when a
+penalty deselected variables).}
+\item{model_info}{The outcome \code{family}, the number of clusters
+\code{K}, \code{n_observations}, and \code{n_features}, which counts
+\emph{retained} exposures and omics features.}
+\item{feature_selection}{Which exposures and omics features survived, and
+how many were dropped.}
+\item{regularization}{The penalties in force, \code{Rho_G},
+\code{Rho_Z_Mu} and \code{Rho_Z_Cov}.}
+\item{parameters}{Estimates restricted to the retained features:
+\code{beta} (exposure-to-cluster, intercept column always kept along
+with any covariate columns), \code{mu} (cluster-specific omics means)
+and \code{gamma} (cluster-to-outcome, in both absolute and
+reference-coded form).}
+\item{missing_data}{The fit's \code{missing_summary}; see
+\code{\link{estimate_lucid}}.}
+\item{boot.se}{The \code{boot.se} argument as supplied, or \code{NULL}.}
+}
+When \code{boot.se} is supplied, every printed bootstrap CI table
+(G-to-X, cluster-to-Y, and cluster-specific omics means) gains a
+\code{sig} column: \code{"*"} where the normal-theory confidence
+interval excludes 0, \code{""} otherwise.
 }
 \description{
-Summarize results of the LUCID model
+Assembles the reported quantities for a fitted LUCID model and, by default,
+prints them. The same components are returned invisibly as a list of class
+\code{sumlucid_early}, so they can be extracted programmatically rather than
+parsed from the printed output.
+
+Two conventions are worth noting when reading the output. Outcome effects are
+printed as an intercept -- cluster 1's level -- followed by explicit
+contrasts of each remaining cluster against it, so the second row is a
+between-cluster difference and not that cluster's own mean. And the parameter
+tables are restricted to the features the model retained, so their dimensions
+match the fit rather than the original input.
 }
 \examples{
 \donttest{
 # use simulated data
-G <- sim_data$G
-Z <- sim_data$Z
-Y_normal <- sim_data$Y_normal
+G <- sim_data$G[1:300, , drop = FALSE]
+Z <- sim_data$Z[1:300, , drop = FALSE]
+Y_normal <- sim_data$Y_normal[1:300]
 
 # fit lucid model
 fit1 <- estimate_lucid(G = G, Z = Z, Y = Y_normal, lucid_model = "early", family = "normal", K = 2,
 seed = 1008)
 
 # conduct bootstrap resampling
-boot1 <- boot_lucid(G = G, Z = Z, Y = Y_normal, lucid_model = "early", model = fit1, R = 100)
+boot1 <- suppressWarnings(
+  boot_lucid(G = G, Z = Z, Y = Y_normal, lucid_model = "early", model = fit1, R = 5)
+)
 
 # summarize lucid model
-summary_lucid(fit1)
+summary(fit1)
 
 # summarize lucid model with bootstrap CIs
-summary_lucid(fit1, boot.se = boot1)
+summary(fit1, boot.se = boot1)
 }
+}
+\seealso{
+\code{\link{boot_lucid}} for the confidence limits, and
+\code{\link{predict_lucid}} for cluster and outcome prediction.
 }

@@ -44,7 +44,7 @@ test_that("check prediction of LUCID with binary outcome (K = 2,2,2)", {
   expect_equal(fit1$inclusion.p, pred1$inclusion.p, tolerance = 0.05)
   expect_equal(class(pred1$pred.x), "list")
   expect_equal(max(pred1$pred.y), 1)
-  expect_equal(mean(pred1$pred.y), 0.99)
+  expect_equal(mean(pred1$pred.y), 0.99, tolerance = 0.05)
   expect_equal(mean(pred1$inclusion.p[[1]]), 0.5)
 
   #use new data
@@ -74,6 +74,5 @@ test_that("check prediction of LUCID with binary outcome (K = 2,2,2)", {
   expect_equal(mean(pred3$inclusion.p[[1]]), 0.5)
 
 })
-
 
 

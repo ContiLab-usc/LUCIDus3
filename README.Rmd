@@ -1,0 +1,130 @@
+---
+output:
+  github_document:
+    html_preview: false
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-"
+)
+```
+
+# LUCIDus
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+LUCIDus implements **LUCID** (Latent Unknown Clusters by Integrating
+multi-omics Data): a model that finds latent subgroups of subjects that are
+simultaneously predictable from a set of exposures, characterized by
+distinct multi-omics profiles, and associated with a health outcome. It
+supports three integration strategies -- **early**, **parallel**, and
+**serial** -- along with feature selection, missing-data handling,
+prediction, g-computation, and bootstrap inference.
+
+## Installation
+
+```r
+# install.packages("devtools")
+devtools::install_github("USCbiostats/LUCIDus")
+```
+
+## A minimal example: parallel integration on the bundled HELIX data
+
+This walks through fitting a LUCID **parallel** model -- one latent cluster
+variable per omics layer, fit jointly -- on `simulated_HELIX_data`, the
+simulated HELIX-study dataset bundled with the package. Parallel integration
+is the right choice here because the omics data comes as three genuinely
+distinct layers (methylome, transcriptome, miRNA); rather than pooling them
+into one matrix, each layer gets its own cluster variable, estimated
+together. For a much more detailed, narrated walkthrough of all three
+architectures (including the two-step screen-then-refit workflow for real
+feature selection), see `vignette("lucid_3models_normal_outcome")`.
+
+```{r fit, warning = FALSE}
+library(LUCIDus)
+
+# The bundled HELIX dataset: one exposure (postnatal mercury exposure),
+# three omics layers, two covariates, and one outcome (a liver enzyme).
+data(simulated_HELIX_data)
+d <- simulated_HELIX_data
+
+G <- as.matrix(d$phenotype$hs_hg_m_scaled)
+colnames(G) <- "mercury_exposure"
+
+Z <- list(
+  methylome     = d$methylome,
+  transcriptome = d$transcriptome,
+  miRNA         = d$miRNA
+)
+
+Co <- data.frame(
+  age = d$phenotype$hs_child_age_yrs_None,
+  sex = as.numeric(d$phenotype$e3_sex_None == "male")
+)
+
+Y <- as.matrix(d$phenotype$ck18_scaled)
+colnames(Y) <- "ck18"
+
+fit <- estimate_lucid(
+  G = G, Z = Z, Y = Y, CoG = Co, CoY = Co,
+  lucid_model = "parallel",
+  family = "normal",
+  K = c(2, 2, 2),
+  seed = 2026
+)
+
+class(fit)
+```
+
+`lucid_model = "parallel"` selects the architecture; `K = c(2, 2, 2)` asks
+for 2 clusters in each of the three layers (in `Z`'s order). `CoG`/`CoY` are
+covariates adjusted for in the exposure-to-cluster and cluster-to-outcome
+models respectively -- here, the same age/sex covariates for both.
+
+### Reading the fitted model
+
+```{r summary}
+summary(fit)
+```
+
+`summary()` reports, per layer: the model specification, the exposure's
+effect on cluster membership (as a log-odds/odds ratio), and each cluster's
+mean omics profile. Two extractor functions read the same information
+programmatically, auto-detecting that `fit` is a parallel model with no
+further input:
+
+```{r extractors}
+# Each subject's hard cluster assignment, one vector per layer.
+str(get_cluster_assignment(fit))
+
+# The 5 omics features that most separate the clusters, one layer's worth.
+get_top_omics_features(fit, top_n = 5)[["methylome"]]
+```
+
+### Visualizing the clusters' omics profiles
+
+`plot_cluster_omic_profile()` shows which omics features distinguish the
+clusters, and in which direction -- one figure per layer for a parallel fit:
+
+```{r profile, fig.width = 6.5, fig.height = 4.5}
+plot_cluster_omic_profile(fit, top_n = 8)[["methylome"]]
+```
+
+## Learn more
+
+Once installed, every vignette below is available with `vignette("<name>")`.
+Rendered copies are also in [`docs/`](docs/) in this repository, viewable
+directly in a browser without installing the package:
+
+- [`lucid_3models_normal_outcome`](https://htmlpreview.github.io/?https://github.com/ContiLab-usc/LUCIDus-3.0/blob/main/docs/lucid_3models_normal_outcome.html) --
+  a full early/parallel/serial walkthrough, including feature selection and
+  bootstrap inference, for a **continuous** outcome.
+- [`lucid_3models_binary_outcome`](https://htmlpreview.github.io/?https://github.com/ContiLab-usc/LUCIDus-3.0/blob/main/docs/lucid_3models_binary_outcome.html) --
+  the same walkthrough for a **binary** outcome.
+- [`lucidus_full_functionality_guide`](https://htmlpreview.github.io/?https://github.com/ContiLab-usc/LUCIDus-3.0/blob/main/docs/lucidus_full_functionality_guide.html) --
+  a breadth-first tour of every exported function.
+- `NEWS.md` -- what changed in the current release.
