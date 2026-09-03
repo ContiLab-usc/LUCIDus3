@@ -139,7 +139,8 @@ function (G, Z, Y, CoG = NULL, CoY = NULL, family = c("normal",
             bic[i] <- cal_bic_serial(fit)
         }
         if (all(is.na(bic))) {
-            stop("LUCID model fails to converge given current tuning parameters")
+            stop("LUCID model fails to converge given current tuning parameters. ",
+                "Last candidate's error: ", .last_try_error_message(model_list))
         }
         min_bic <- min(bic, na.rm = TRUE)
         # [1] guards against ties: which() can return several indices, and
@@ -206,7 +207,8 @@ function (G, Z, Y, CoG = NULL, CoY = NULL, family = "normal",
             res_model[[i]] <- fit
         }
         if (all(is.na(tune_list[, 5]))) {
-            stop("LUCID model fails to converge given current tuning parameters")
+            stop("LUCID model fails to converge given current tuning parameters. ",
+                "Last candidate's error: ", .last_try_error_message(res_model))
         }
         x <- min(tune_list[, 5], na.rm = TRUE)
         # [1] guards against ties: which() can return several indices, and
@@ -255,13 +257,39 @@ function (G, Z, Y, CoG = NULL, CoY = NULL, family = "normal",
         colnames(tune_K) <- c(k_names, "Rho_G", "Rho_Z_Mu", 
             "Rho_Z_Cov", "BIC")
         if (all(is.na(tune_K$BIC))) {
-            stop("LUCID model fails to converge given current tuning parameters")
+            stop("LUCID model fails to converge given current tuning parameters. ",
+                "Last candidate's error: ", .last_try_error_message(model_list))
         }
         min_bic <- min(tune_K$BIC, na.rm = TRUE)
         model_opt_index <- which(tune_K$BIC == min_bic)[1]
         return(list(tune_K = tune_K, model_list = model_list, 
             model_opt = model_list[[model_opt_index]]))
     }
+}
+
+#' Pull the underlying error message out of the last try-error in a list
+#'
+#' `tune_lucid_auxi()`/`tune_lucid()`'s grid loops record a \code{try-error}
+#' object for every candidate that fails, then swallow it into a generic
+#' "fails to converge" message once every candidate has failed -- which used
+#' to make a genuine EM non-convergence indistinguishable from an unrelated
+#' error (e.g. a missing optional dependency) raised inside
+#' \code{estimate_lucid()}. This surfaces the actual message from the last
+#' failing candidate instead.
+#'
+#' @param model_list A list of fitted models and/or \code{try-error} objects.
+#' @return The condition message of the last \code{try-error} in
+#'   \code{model_list}, or \code{"(no error detail available)"} if none is
+#'   found.
+#' @noRd
+.last_try_error_message <- function(model_list) {
+    is_error <- vapply(model_list, function(x) inherits(x, "try-error"), logical(1))
+    if (!any(is_error)) {
+        return("(no error detail available)")
+    }
+    last_error <- model_list[is_error][[sum(is_error)]]
+    msg <- conditionMessage(attr(last_error, "condition"))
+    trimws(msg)
 }
 
 #' Cartesian product of nested tuning-grid values, preserving list structure

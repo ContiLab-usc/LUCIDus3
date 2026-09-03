@@ -1,3 +1,6 @@
+# Heavy: fits multiple LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # estimate_lucid() and tune_lucid() both document `lucid_model` as defaulting
 # to "early" (the first element of c("early", "parallel", "serial")). Both
 # used to forward that unresolved, length-3 default vector to an internal

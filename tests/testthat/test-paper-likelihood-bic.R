@@ -1,3 +1,6 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 test_that("observed likelihood is the log-sum-exp over latent states", {
   log_joint <- matrix(c(-2, -0.3, -1.1,
                         -0.4, -1.7, -0.8,

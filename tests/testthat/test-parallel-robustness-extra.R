@@ -1,3 +1,6 @@
+# Heavy: fits multiple LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # Additional robustness tests for parallel LUCID
 
 test_that("check_na for parallel classifies row-level missing patterns correctly", {
@@ -186,6 +189,7 @@ test_that("parallel summary reports selected-feature tables with valid bounds", 
 })
 
 test_that("parallel summary reports per-layer listwise and sporadic missing profile", {
+  skip_if_not_installed("mix")
   set.seed(1008)
   G <- matrix(rnorm(160), nrow = 40)
   Z1 <- matrix(rnorm(320), nrow = 40)

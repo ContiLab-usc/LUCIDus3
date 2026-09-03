@@ -1,3 +1,6 @@
+# Heavy: fits multiple LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # K >= 2 was already enforced when fitting through lucid() (early), through
 # tune_lucid()'s parallel branch, and through estimate_lucid()'s serial
 # branch -- but est_lucid() itself (early and parallel) and tune_lucid_auxi()'s

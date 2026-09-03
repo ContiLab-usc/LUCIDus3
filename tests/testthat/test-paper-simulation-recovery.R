@@ -1,3 +1,5 @@
+skip_on_cran()
+
 simulate_early_paper <- function(seed = 9201, N = 650) {
   set.seed(seed)
   G <- cbind(g1 = rnorm(N), g2 = rnorm(N))

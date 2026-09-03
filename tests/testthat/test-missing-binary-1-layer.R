@@ -1,3 +1,6 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # LUCID - 1 omics, binary outcome with missing data
 
 test_that("early binary handles missing Z with stable posterior output", {

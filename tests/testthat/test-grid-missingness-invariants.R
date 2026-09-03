@@ -1,3 +1,5 @@
+skip_on_cran()
+
 # Invariants that must hold for each missingness regime, across architectures.
 #
 # The package branches on a per-subject, per-layer code (R/missing.R:62-66):

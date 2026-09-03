@@ -1,3 +1,5 @@
+skip_on_cran()
+
 # tune_lucid()'s early/parallel branches wrap each candidate fit in try(),
 # record NA on failure, and only stop() if every candidate failed -- so one
 # bad K in a grid search doesn't crash the whole tuning run. The serial

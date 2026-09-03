@@ -1,3 +1,6 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # plot_cluster_omic_profile(): the ranking, and the plumbing across model types.
 #
 # The ranking is tested on hand-built panels where mu and the within-cluster

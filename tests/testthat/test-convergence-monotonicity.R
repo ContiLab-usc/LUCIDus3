@@ -1,3 +1,6 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # check_convergence() (R/stability_utils.R, internal since it's an EM building
 # block rather than something a user calls directly) used to have zero
 # call sites: early and parallel each did their own ad-hoc abs(old - new) < tol

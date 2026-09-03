@@ -1,3 +1,6 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # summary()'s printed bootstrap CI tables (G-to-X, cluster-to-Y, and
 # cluster-specific omics means) mark a row "*" when its normal-theory CI
 # excludes 0. The column only exists when boot.se is supplied -- there is no

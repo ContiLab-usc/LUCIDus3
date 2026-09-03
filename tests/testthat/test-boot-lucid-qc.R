@@ -1,3 +1,5 @@
+skip_on_cran()
+
 # boot_lucid() used to skip the validation the fitting functions it wraps
 # already enforce: none of its three branches called check_complete_input()
 # on G/Y/CoG/CoY, so a missing value failed confusingly inside boot::boot()'s

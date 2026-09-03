@@ -112,12 +112,14 @@ available on the returned object, see \emph{Value}.
 
 \examples{
 \donttest{
-G <- sim_data$G[1:300, , drop = FALSE]
-Z <- sim_data$Z[1:300, , drop = FALSE]
-Y <- sim_data$Y_normal[1:300]
+# a small subset keeps the example quick
+G <- sim_data$G[1:150, , drop = FALSE]
+Z <- sim_data$Z[1:150, , drop = FALSE]
+Y <- sim_data$Y_normal[1:150]
 
 fit <- estimate_lucid(G = G, Z = Z, Y = Y, lucid_model = "early",
-                      family = "normal", K = 2, seed = 1008)
+                      family = "normal", K = 2, seed = 1008,
+                      max_itr = 20, max_tot.itr = 50)
 
 p <- plot_cluster_omic_profile(fit)
 p[[1]]

@@ -1,3 +1,6 @@
+# Heavy: fits multiple LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # lucid()'s selection-count messages and tune_lucid()'s "Tuning LUCID model"
 # banner used to print unconditionally, ignoring verbose_tune -- the one flag
 # that exists to control exactly this. This pins that they now respect it,

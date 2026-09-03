@@ -1,3 +1,6 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # init_omic.data.model = NULL is the documented way to let mclust choose the
 # covariance geometry, and is what the R Journal vignette passes. For the
 # parallel model it used to fail: R/em.R built the per-layer model names with

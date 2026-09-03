@@ -87,10 +87,14 @@ serial_em_control <- function(submodel, tol, max_itr, max_tot.itr) {
 #' @param family The distribution of the outcome
 #' @param seed Random seed to initialize the EM algorithm
 #' @param init_impute Method to initialize the imputation of missing values in
-#' LUCID. \code{mix} will use \code{mclust:imputeData} to implement EM Algorithm
-#' for Unrestricted General Location Model by the mix package to impute the missing values in omics
-#' data; \code{lod} will initialize the imputation via replacing missing values by
-#' LOD / sqrt(2). LOD is determined by the minimum of each variable in omics data.
+#' LUCID. \code{lod} (the default) initializes the imputation via replacing
+#' missing values by LOD / sqrt(2), where LOD is determined by the minimum of
+#' each variable in omics data; \code{mix} uses \code{mclust::imputeData} to
+#' implement EM Algorithm for Unrestricted General Location Model via the
+#' \code{mix} package to impute the missing values in omics data. \code{mix}
+#' is archived on CRAN and must be installed manually (e.g. from the CRAN
+#' Archive) to use this option; a request for \code{init_impute = "mix"}
+#' without \code{mix} installed raises an informative error.
 #' @param init_par For "early", an interface to initialize EM algorithm, if mclust,
 #' initiate the parameters using the \code{mclust} package, if random, initiate the parameters
 #' by drawing from a uniform distribution;
@@ -229,21 +233,20 @@ serial_em_control <- function(submodel, tol, max_itr, max_tot.itr) {
 #' i <- 1008
 #' set.seed(i)
 #' G <- matrix(rnorm(500), nrow = 100)
-#' Z1 <- matrix(rnorm(1000),nrow = 100)
+#' Z1 <- matrix(rnorm(1000), nrow = 100)
 #' Z2 <- matrix(rnorm(1000), nrow = 100)
 #' Z3 <- matrix(rnorm(1000), nrow = 100)
-#' Z4 <- matrix(rnorm(1000), nrow = 100)
-#' Z5 <- matrix(rnorm(1000), nrow = 100)
-#' Z <- list(Z1 = Z1, Z2 = Z2, Z3 = Z3, Z4 = Z4, Z5 = Z5)
+#' Z <- list(Z1 = Z1, Z2 = Z2, Z3 = Z3)
 #' Y <- rnorm(100)
 #' CoY <- matrix(rnorm(200), nrow = 100)
 #' CoG <- matrix(rnorm(200), nrow = 100)
-#' fit1 <- estimate_lucid(G = G, Z = Z, Y = Y, K = list(2,2,2,2,2),
+#' fit1 <- estimate_lucid(G = G, Z = Z, Y = Y, K = list(2, 2, 2),
 #' lucid_model = "serial",
 #' family = "normal",
 #' seed = i,
 #' CoG = CoG, CoY = CoY,
-#' useY = TRUE)
+#' useY = TRUE,
+#' max_itr = 20, max_tot.itr = 50)
 #' @export
 #'
 estimate_lucid <- function(lucid_model = c("early", "parallel","serial"),
@@ -258,7 +261,7 @@ estimate_lucid <- function(lucid_model = c("early", "parallel","serial"),
                       Rho_Z_Cov = 0,
                       family = c("normal", "binary"),
                       seed = 123,
-                      init_impute = c("mix", "lod"),
+                      init_impute = c("lod", "mix"),
                       init_par = c("mclust", "random"),
                       verbose = FALSE,
                       n_starts = 1L) {
@@ -706,7 +709,7 @@ function (lucid_model = c("early", "parallel"), G, Z, Y, CoG = NULL,
     CoY = NULL, K, init_omic.data.model = "EEV", useY = TRUE,
     tol = 0.001, max_itr = 1000, max_tot.itr = 10000, Rho_G = 0,
     Rho_Z_Mu = 0, Rho_Z_Cov = 0, family = c("normal", "binary"),
-    seed = 123, init_impute = c("mix", "lod"), init_par = c("mclust",
+    seed = 123, init_impute = c("lod", "mix"), init_par = c("mclust",
         "random"), verbose = FALSE, relabel_by_outcome = TRUE,
     n_starts = 1L)
 {
@@ -879,10 +882,16 @@ function (lucid_model = c("early", "parallel"), G, Z, Y, CoG = NULL,
         }
         if (na_pattern$impute_flag) {
             if (init_impute == "mix") {
+                if (!requireNamespace("mix", quietly = TRUE)) {
+                  stop("init_impute = \"mix\" requires the 'mix' package, ",
+                    "which is archived on CRAN; install it manually (e.g. ",
+                    "from the CRAN Archive) or use init_impute = \"lod\" ",
+                    "instead.", call. = FALSE)
+                }
                 if (verbose) {
                   cat("Intializing imputation of missing values in 'Z' via the mix package \n\n")
                 }
-                invisible(capture.output(Z <- mclust::imputeData(Z, 
+                invisible(capture.output(Z <- mclust::imputeData(Z,
                   seed = seed)))
                 Z[na_pattern$indicator_na == 3, ] <- NA
             }
@@ -1053,21 +1062,27 @@ function (lucid_model = c("early", "parallel"), G, Z, Y, CoG = NULL,
                   )
                   res.r <- t(apply(updated.likelihood, 1, lse_vec))
                   raw.loglik <- observed_loglik(updated.likelihood)
+                  # `new.loglik` is the PENALIZED objective -- what the penalized
+                  # EM actually ascends, so it drives the convergence/dip checks
+                  # below. `loglik_trace` and the stored `$likelihood` are the
+                  # unpenalized observed-data log-likelihood (`raw.loglik`), so
+                  # the trace has one meaning across model types and its last
+                  # value equals `$likelihood`.
                   new.loglik <- raw.loglik - early_penalty_value(
                     res.beta, res.mu, res.sigma, Rho_G, Rho_Z_Mu,
                     Rho_Z_Cov, dimG
                   )
                   if (isTRUE(verbose)) {
                     if (Select_G | Select_Z) {
-                      cat(sprintf("iteration %d: penalized log-likelihood = %.3f\n",
-                                  itr, new.loglik))
+                      cat(sprintf("iteration %d: penalized log-likelihood = %.3f (observed-data = %.3f)\n",
+                                  itr, new.loglik, raw.loglik))
                     }
                     else {
                       cat(sprintf("iteration %d: log-likelihood = %.3f\n",
                                   itr, new.loglik))
                     }
                   }
-                  loglik_trace <- c(loglik_trace, new.loglik)
+                  loglik_trace <- c(loglik_trace, raw.loglik)
                   # The I-step is a majorization step, not a true M-step, so
                   # under sporadic missingness the observed log-likelihood can
                   # dip by a small, bounded amount without indicating a real
@@ -1154,11 +1169,11 @@ function (lucid_model = c("early", "parallel"), G, Z, Y, CoG = NULL,
         }
         if (isTRUE(verbose)) {
             if (penalty_requested) {
-                cat(sprintf("Finished LUCID early model: penalized log-likelihood = %.3f; selected G = %d/%d; selected Z = %d/%d.\n\n", 
+                cat(sprintf("Finished LUCID early model: observed-data log-likelihood = %.3f; selected G = %d/%d; selected Z = %d/%d.\n\n",
                     res.loglik, sum(selectG), length(selectG), sum(selectZ), length(selectZ)))
             }
             else {
-                cat(sprintf("Finished LUCID early model: log-likelihood = %.3f.\n\n", 
+                cat(sprintf("Finished LUCID early model: log-likelihood = %.3f.\n\n",
                     res.loglik))
             }
         }
@@ -1238,10 +1253,16 @@ function (lucid_model = c("early", "parallel"), G, Z, Y, CoG = NULL,
             na_pattern[[i]] <- check_na(Z[[i]])
             if (na_pattern[[i]]$impute_flag) {
                 if (init_impute == "mix") {
+                  if (!requireNamespace("mix", quietly = TRUE)) {
+                    stop("init_impute = \"mix\" requires the 'mix' package, ",
+                      "which is archived on CRAN; install it manually (e.g. ",
+                      "from the CRAN Archive) or use init_impute = \"lod\" ",
+                      "instead.", call. = FALSE)
+                  }
                   if (verbose) {
                     cat("Intializing imputation of missing values in 'Z' via the mix package \n\n")
                   }
-                  invisible(capture.output(Z[[i]] <- mclust::imputeData(Z[[i]], 
+                  invisible(capture.output(Z[[i]] <- mclust::imputeData(Z[[i]],
                     seed = seed)))
                   Z[[i]][na_pattern[[i]]$indicator_na == 3, ] <- NA
                 }
@@ -1500,7 +1521,7 @@ function (lucid_model = c("early", "parallel"), G, Z, Y, CoG = NULL,
                 z_tot <- vapply(selectZ, function(x) {
                   if (is.null(dim(x))) length(x) else ncol(x)
                 }, numeric(1))
-                cat(sprintf("Finished LUCID parallel model: penalized log-likelihood = %.3f; selected G = %d/%d; selected Z by layer = %s.\n\n", 
+                cat(sprintf("Finished LUCID parallel model: observed-data log-likelihood = %.3f; selected G = %d/%d; selected Z by layer = %s.\n\n",
                     final_loglik, sum(selectG), length(selectG), paste0(z_sel, "/", z_tot, collapse = ", ")))
             }
             else {

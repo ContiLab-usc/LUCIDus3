@@ -1,3 +1,6 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # The serial summary used to append a second copy of BIC and loglik under the
 # same names, leaving the returned list with duplicate entries. `$BIC` resolved
 # to the first, so the copies were unreachable, but str() output looked

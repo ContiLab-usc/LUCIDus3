@@ -1,3 +1,6 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # test plot_lucid function
 
 test_that("check whether plot_lucid function could work", {

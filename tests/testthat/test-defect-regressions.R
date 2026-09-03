@@ -190,6 +190,7 @@ test_that("glasso is not invoked, and does not warn, when Rho_Z_Cov is zero", {
 })
 
 test_that("predict_lucid() works without naming lucid_model (paper Section 3.5)", {
+  skip_on_cran()
   # The R Journal paper calls predict_lucid(model = fit1, G = ..., Z = ..., Y = ...)
   # with no lucid_model argument.  The unresolved default was forwarded to the
   # internal worker, which accepts only c("early","parallel"), so match.arg()

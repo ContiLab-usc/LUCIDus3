@@ -54,16 +54,15 @@
 #' @export
 #'
 #' @examples
-#' # prepare data
-#' G <- sim_data$G
-#' Z <- sim_data$Z
-#' Y_normal <- sim_data$Y_normal
-#' Y_binary <- sim_data$Y_binary
-#' cov <- sim_data$Covariate
+#' # prepare data (a small subset keeps the example quick)
+#' G <- sim_data$G[1:150, ]
+#' Z <- sim_data$Z[1:150, ]
+#' Y_normal <- sim_data$Y_normal[1:150, , drop = FALSE]
 #'
 #' # plot lucid model
 #' fit1 <- estimate_lucid(G = G, Z = Z, Y = Y_normal, lucid_model = "early",
-#' CoY = NULL, family = "normal", K = 2, seed = 1008)
+#' CoY = NULL, family = "normal", K = 2, seed = 1008,
+#' max_itr = 20, max_tot.itr = 50)
 #' plot(fit1)
 #'
 #' # change node color

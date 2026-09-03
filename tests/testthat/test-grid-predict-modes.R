@@ -1,3 +1,5 @@
+skip_on_cran()
+
 # predict_lucid() has four independent switches -- g_computation, response,
 # whether Y is supplied, and whether Z is supplied -- and three architectures to
 # cross them with. The combinations are not interchangeable: g-computation drops

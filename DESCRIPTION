@@ -1,6 +1,6 @@
 Package: LUCIDus
 Title: LUCID with Multiple Omics Data
-Version: 3.2.0
+Version: 3.2.1
 Authors@R: c(
     person("Qiran", "Jia", , "qiranjia@usc.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-0790-5967")),
@@ -34,7 +34,7 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 LazyData: true
-Suggests: testthat (>= 3.0.0), knitr, rmarkdown, plotly
+Suggests: testthat (>= 3.0.0), knitr, rmarkdown, plotly, mix, visdat
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Imports: mclust, nnet, boot, jsonlite, networkD3, progress, stats,

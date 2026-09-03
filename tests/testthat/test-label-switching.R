@@ -1,3 +1,6 @@
+# Heavy: fits multiple LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # F1: relabelling invariance, and "every reported block refers to the same
 # cluster".  The 3.0.3 gamma display bug -- correct estimate, wrong label -- is
 # exactly the failure class these tests exist to catch.

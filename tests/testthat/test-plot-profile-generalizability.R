@@ -1,3 +1,5 @@
+skip_on_cran()
+
 # Does plot_cluster_omic_profile() generalize across the whole model space?
 #
 # test-plot-cluster-omic-profile.R covers the mechanics: the ranking measure,

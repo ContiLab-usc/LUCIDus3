@@ -1,8 +1,12 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # LUCID - five omics, binary outcome
 
 
 
 test_that("check estimations of LUCID with binary outcome (K = 2,2,2)", {
+  skip_if_not_installed("mix")
   i <- 1008
   set.seed(i)
   G <- matrix(rnorm(500), nrow = 100)

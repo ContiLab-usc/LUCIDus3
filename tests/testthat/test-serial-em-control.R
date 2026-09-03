@@ -1,3 +1,6 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # A serial fit runs no EM loop of its own, so its top-level em_control used to
 # report only the stopping controls. A user then had no way to see, without
 # reaching into every submodel, that a stage had exhausted max_itr. These tests

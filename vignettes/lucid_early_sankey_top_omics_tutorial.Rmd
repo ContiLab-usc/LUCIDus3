@@ -167,7 +167,10 @@ fit_early <- estimate_lucid(
   CoY = CoY,
   family = "normal",
   K = 2,
-  seed = 1008
+  seed = 1008,
+  max_itr = 20,
+  max_tot.itr = 60,
+  tol = 1e-2
 )
 
 class(fit_early)

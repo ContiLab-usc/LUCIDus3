@@ -1,3 +1,6 @@
+# Heavy: fits multiple LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # Tier 1: analytic checks of every estimating equation against independent
 # oracles in helper-oracle.R.  No EM run to convergence, so these are fast.
 

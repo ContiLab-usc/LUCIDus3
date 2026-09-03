@@ -1,6 +1,10 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # LUCID - three omics, normal outcome
 
 test_that("check estimations of LUCID with normal outcome (K = 2,2,2) with missing data", {
+  skip_if_not_installed("mix")
   # run LUCID model
   i <- 1008
   set.seed(i)

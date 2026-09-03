@@ -1,3 +1,6 @@
+# Heavy: fits multiple LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # get_selected_G(), get_selected_Z(), get_cluster_assignment(), and
 # get_top_omics_features() all auto-detect early/parallel/serial from the
 # fitted object's class, so a user never branches on model type themselves.

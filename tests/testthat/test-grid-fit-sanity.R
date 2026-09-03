@@ -1,3 +1,5 @@
+skip_on_cran()
+
 # Combination sweep: every architecture x topology x family x missingness cell
 # fits, returns the structure it was asked for, and contains no NA, NaN, Inf or
 # absurd parameter value.

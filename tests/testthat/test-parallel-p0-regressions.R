@@ -1,3 +1,6 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # Regression tests for critical parallel-model paths
 
 test_that("summary_lucid works with current parallel select shapes", {
@@ -92,6 +95,7 @@ test_that("parallel prediction for 2 layers matches manual state integration", {
 })
 
 test_that("parallel E-step remains finite with all-missing rows in one layer", {
+  skip_if_not_installed("mix")
   set.seed(1008)
   G <- matrix(rnorm(320), nrow = 80)
   Z1 <- matrix(rnorm(800), nrow = 80)
@@ -122,6 +126,7 @@ test_that("parallel E-step remains finite with all-missing rows in one layer", {
 })
 
 test_that("parallel missing-data path keeps all-missing rows as NA and imputes partial rows", {
+  skip_if_not_installed("mix")
   set.seed(1008)
   G <- matrix(rnorm(240), nrow = 60)
   Z1 <- matrix(rnorm(600), nrow = 60)

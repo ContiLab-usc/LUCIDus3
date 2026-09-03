@@ -1,3 +1,6 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # The serial results list used to leave `likelihood` and `select` commented
 # out (dead references to variables never assigned in that scope) and a `#z =`
 # line that was never resurrected. Every submodel already carried its own

@@ -303,7 +303,7 @@ serial_boot <- boot_lucid(
   CoG = d_miss$CoG,
   CoY = d_miss$CoY,
   model = serial_fit,
-  R = 3,
+  R = 2,
   conf = 0.90
 )
 
@@ -326,7 +326,7 @@ summary(serial_fit, boot.se = serial_boot)
 ```
 
 Every coefficient table above now also carries the `sig` column (see the
-3-model tutorials for its exact definition); at `R = 3` replicates the
+3-model tutorials for its exact definition); at `R = 2` replicates the
 resulting intervals are for demonstrating the output format only, not for
 drawing conclusions about which effects are real.
 

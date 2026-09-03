@@ -1,3 +1,6 @@
+# Heavy: fits LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # LUCID - LUCID in Serial, normal outcome
 
 test_that("check estimations of LUCID in Serial with normal outcome (K = 2,list(2,2),3,2)", {

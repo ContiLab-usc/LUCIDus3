@@ -107,7 +107,7 @@ test_that("a binary outcome that is not 0/1 is still rejected on its own terms",
 test_that("initialization arguments are resolved on the fit, not left unevaluated", {
   # estimate_lucid() left init_impute and init_par at their match.arg defaults
   # for the serial path, so a fit taking the defaults reported
-  # c("mix", "lod") / c("mclust", "random") -- a record of a choice that was
+  # c("lod", "mix") / c("mclust", "random") -- a record of a choice that was
   # never made, which a bootstrap refit reading these fields would carry forward.
   for (model in c("early", "parallel", "serial")) {
     n_layer <- if (model == "early") 1L else 2L
@@ -117,7 +117,7 @@ test_that("initialization arguments are resolved on the fit, not left unevaluate
 
     expect_length(fit$init_impute, 1L)
     expect_length(fit$init_par, 1L)
-    expect_equal(fit$init_impute, "mix", info = model)
+    expect_equal(fit$init_impute, "lod", info = model)
     expect_equal(fit$init_par, "mclust", info = model)
   }
 })

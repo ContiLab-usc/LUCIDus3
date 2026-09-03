@@ -22,7 +22,7 @@ estimate_lucid(
   Rho_Z_Cov = 0,
   family = c("normal", "binary"),
   seed = 123,
-  init_impute = c("mix", "lod"),
+  init_impute = c("lod", "mix"),
   init_par = c("mclust", "random"),
   verbose = FALSE,
   n_starts = 1L
@@ -84,10 +84,14 @@ scalar penalty inputs are supported.}
 \item{seed}{Random seed to initialize the EM algorithm}
 
 \item{init_impute}{Method to initialize the imputation of missing values in
-LUCID. \code{mix} will use \code{mclust:imputeData} to implement EM Algorithm
-for Unrestricted General Location Model by the mix package to impute the missing values in omics
-data; \code{lod} will initialize the imputation via replacing missing values by
-LOD / sqrt(2). LOD is determined by the minimum of each variable in omics data.}
+LUCID. \code{lod} (the default) initializes the imputation via replacing
+missing values by LOD / sqrt(2), where LOD is determined by the minimum of
+each variable in omics data; \code{mix} uses \code{mclust::imputeData} to
+implement EM Algorithm for Unrestricted General Location Model via the
+\code{mix} package to impute the missing values in omics data. \code{mix}
+is archived on CRAN and must be installed manually (e.g. from the CRAN
+Archive) to use this option; a request for \code{init_impute = "mix"}
+without \code{mix} installed raises an informative error.}
 
 \item{init_par}{For "early", an interface to initialize EM algorithm, if mclust,
 initiate the parameters using the \code{mclust} package, if random, initiate the parameters
@@ -229,19 +233,18 @@ EM algorithm to estimate LUCID with one or multiple omics layers
 i <- 1008
 set.seed(i)
 G <- matrix(rnorm(500), nrow = 100)
-Z1 <- matrix(rnorm(1000),nrow = 100)
+Z1 <- matrix(rnorm(1000), nrow = 100)
 Z2 <- matrix(rnorm(1000), nrow = 100)
 Z3 <- matrix(rnorm(1000), nrow = 100)
-Z4 <- matrix(rnorm(1000), nrow = 100)
-Z5 <- matrix(rnorm(1000), nrow = 100)
-Z <- list(Z1 = Z1, Z2 = Z2, Z3 = Z3, Z4 = Z4, Z5 = Z5)
+Z <- list(Z1 = Z1, Z2 = Z2, Z3 = Z3)
 Y <- rnorm(100)
 CoY <- matrix(rnorm(200), nrow = 100)
 CoG <- matrix(rnorm(200), nrow = 100)
-fit1 <- estimate_lucid(G = G, Z = Z, Y = Y, K = list(2,2,2,2,2),
+fit1 <- estimate_lucid(G = G, Z = Z, Y = Y, K = list(2, 2, 2),
 lucid_model = "serial",
 family = "normal",
 seed = i,
 CoG = CoG, CoY = CoY,
-useY = TRUE)
+useY = TRUE,
+max_itr = 20, max_tot.itr = 50)
 }

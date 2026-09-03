@@ -1,3 +1,6 @@
+# Heavy: fits multiple LUCID models; runs locally and in CI, not on CRAN.
+skip_on_cran()
+
 # What predict_lucid() accepts, and what it says when it declines.
 #
 # The rule is one sentence: Z is required for every model type, and only

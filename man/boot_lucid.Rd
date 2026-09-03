@@ -87,24 +87,20 @@ method of \code{boot::boot}. Supports \code{lucid_model = "early"},
 }
 \examples{
 \donttest{
-# use simulated data
-G <- sim_data$G[1:300, , drop = FALSE]
-Z <- sim_data$Z[1:300, , drop = FALSE]
-Y_normal <- sim_data$Y_normal[1:300]
+# use simulated data (a small subset keeps the example quick)
+G <- sim_data$G[1:150, , drop = FALSE]
+Z <- sim_data$Z[1:150, , drop = FALSE]
+Y_normal <- sim_data$Y_normal[1:150]
 
 # fit lucid model
-fit1 <- estimate_lucid(G = G, Z = Z, Y = Y_normal, lucid_model = "early", 
+fit1 <- estimate_lucid(G = G, Z = Z, Y = Y_normal, lucid_model = "early",
 family = "normal", K = 2,
-seed = 1008)
+seed = 1008, max_itr = 20, max_tot.itr = 50)
 
 # conduct bootstrap resampling (lucid_model is auto-detected from fit1's class)
+# a small R keeps the example quick; `conf` sets the CI level (default 0.95)
 boot1 <- suppressWarnings(
-  boot_lucid(G = G, Z = Z, Y = Y_normal, model = fit1, R = 5)
-)
-
-# Use 90\% CI
-boot2 <- suppressWarnings(
-  boot_lucid(G = G, Z = Z, Y = Y_normal, model = fit1, R = 5, conf = 0.9)
+  boot_lucid(G = G, Z = Z, Y = Y_normal, model = fit1, R = 3, conf = 0.9)
 )
 }
 }

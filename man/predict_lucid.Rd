@@ -102,13 +102,14 @@ This function can also be used to extract latent cluster assignments when using
 the training data as input.
 }
 \examples{
-# prepare data
-G <- sim_data$G
-Z <- sim_data$Z
-Y_normal <- sim_data$Y_normal
+# prepare data (a small subset keeps the example quick)
+G <- sim_data$G[1:150, ]
+Z <- sim_data$Z[1:150, ]
+Y_normal <- sim_data$Y_normal[1:150, , drop = FALSE]
 
 # fit lucid model
-fit1 <- estimate_lucid(G = G, Z = Z, Y = Y_normal, lucid_model = "early", K = 2, family = "normal")
+fit1 <- estimate_lucid(G = G, Z = Z, Y = Y_normal, lucid_model = "early", K = 2,
+                       family = "normal", max_itr = 20, max_tot.itr = 50)
 
 # prediction on training set (lucid_model is auto-detected from fit1's class)
 pred1 <- predict_lucid(model = fit1, G = G, Z = Z, Y = Y_normal)

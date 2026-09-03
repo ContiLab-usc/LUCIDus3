@@ -3,6 +3,9 @@
 # heads.  The 3.0.3 regression -- correct number, wrong label -- was invisible to
 # a test that only asked whether summary() ran.
 
+# Heavy: every block fits a LUCID model to convergence; runs locally and in CI.
+skip_on_cran()
+
 test_that("early summary values equal the fitted parameters", {
   d <- sim_lucid("early", N = 400, K = 3, P = 2, M = 4, family = "normal", seed = 71)
   fit <- suppressMessages(lucid(G = d$G, Z = d$Z, Y = d$Y, lucid_model = "early",
