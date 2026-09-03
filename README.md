@@ -377,7 +377,7 @@ package:
   – the same walkthrough for a **binary** outcome.
 - [`lucidus_full_functionality_guide`](https://htmlpreview.github.io/?https://github.com/ContiLab-usc/LUCIDus-3.0/blob/main/docs/lucidus_full_functionality_guide.html)
   – a breadth-first tour of every exported function.
-- `NEWS.md` – what changed in the current release.
+
 
 ## Citation
 
