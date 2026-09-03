@@ -48,7 +48,7 @@ Lab](https://contilab.usc.edu/about/) to learn more.
 
 ## Installation
 
-You can install the development version of LUCIDus 3.2.0 from R CRAN
+You can install the development version of LUCIDus 3.2.1 from R CRAN
 with:
 
 ``` r
@@ -57,7 +57,7 @@ install.packages("LUCIDus")
 
 ## Workflow
 
-The following figure illustrates the workflow of LUCIDus 3.2.0.
+The following figure illustrates the workflow of LUCIDus 3.2.1.
 <p align="center">
 
 <img src="./figure/fig2-1.png" width="600">
