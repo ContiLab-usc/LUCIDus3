@@ -8,7 +8,7 @@
 [![](https://raw.githubusercontent.com/USCbiostats/badges/master/tommy-image-badge.svg)](https://image.usc.edu)
 <!-- badges: end -->
 
-This repository contains the source code for LUCIDus Version 3.2.0. The
+This repository contains the source code for LUCIDus Version 3.2.1. The
 **LUCIDus** package implements the statistical method LUCID originally
 proposed in the research paper [A Latent Unknown Clustering Integrating
 Multi-Omics Data (LUCID) with Phenotypic
